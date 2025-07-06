@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ECLIP7E</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(180deg, #111111 0%, #000000 100%);
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 200vw;
+    height: 200vh;
+    background:
+      radial-gradient(1.5px 1.5px at 10% 15%, rgba(255,255,255,0.9), transparent),
+      radial-gradient(2px 2px at 30% 40%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 45% 60%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.8px 1.8px at 60% 25%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.2px 1.2px at 75% 70%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(2.5px 2.5px at 85% 80%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.3px 1.3px at 95% 10%, rgba(255,255,255,0.3), transparent);
+    background-repeat: repeat;
+    background-size: 350px 350px;
+    animation: twinkle 4s infinite ease-in-out alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    background: #000;
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+    border-bottom: 2px solid #fff;
+    position: relative;
+    z-index: 1;
+  }
+@media (max-width: 600px) {
+  header img {
+    max-height: none;
+    height: auto;
+    width: 100%;
+  }
+}
+
+  header img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-bottom: 2px solid #fff;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.5rem;
+    letter-spacing: 4px;
+    margin: 0 0 0.5rem;
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255,255,255,0.8);
+  }
+
+  header p {
+    font-style: italic;
+    color: #ccc;
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  nav {
+    display: flex;
+    justify-content: center;
+    background: #111;
+    padding: 1rem 1rem;
+    flex-wrap: wrap;
+    border-bottom: 2px solid #fff;
+    position: relative;
+    z-index: 1;
+  }
+
+  nav a {
+    color: #eee;
+    margin: 0.5rem 1.25rem;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: color 0.3s ease, transform 0.3s ease;
+    position: relative;
+  }
+
+  nav a::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background: #fff;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+
+  nav a:hover,
+  nav a:focus {
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  nav a:hover::after,
+  nav a:focus::after {
+    width: 100%;
+  }
+
+  section {
+    padding: 2.5rem 2rem 3rem;
+    max-width: 850px;
+    margin: auto;
+    background: rgba(20, 20, 20, 0.85);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  section:hover {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    color: #eee;
+    border-bottom: 2px solid #fff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 2rem;
+    letter-spacing: 1.5px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: #ddd;
+    line-height: 1.5;
+  }
+
+  form input,
+  form textarea,
+  form button {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    margin: 0.7rem 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: box-shadow 0.3s ease;
+  }
+
+  form input:focus,
+  form textarea:focus {
+    outline: none;
+    box-shadow: 0 0 10px #fff;
+    background: #111;
+    color: #eee;
+  }
+
+  form textarea {
+    height: 160px;
+    resize: vertical;
+    font-size: 1.05rem;
+    background: #111;
+    color: #eee;
+  }
+
+  form input[type='file'] {
+    background: transparent;
+    color: #ccc;
+    cursor: pointer;
+  }
+
+  form button {
+    background: #fff;
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 12px rgba(255, 255, 255, 0.6);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  form button:hover,
+  form button:focus {
+    background: #eee;
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.8);
+    outline: none;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 600px) {
+    header h1 {
+      font-size: 2.5rem;
+    }
+
+    nav a {
+      margin: 0.4rem 0.8rem;
+      font-size: 1rem;
+    }
+
+    section {
+      padding: 2rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <img src="banner.jpg" alt="RIIZE OT7 Banner" />
+    <h1>ECLIP7E</h1>
+    <p>RIIZE is seven. We don't forget. We don't erase. We speak.</p>
+  </header>
+
+  <nav>
+    <a href="#about">About</a>
+    <a href="#news">News and project updates</a>
+    <a href="#memories">Memories</a>
+    <a href="#letters">Letters</a>
+    <a href="#art">Fan Works</a>
+    <a href="#submit">Submit & Suggestions</a>
+    <a href="#thanks">Wall of Light</a>
+  </nav>
+
+  <section id="about">
+    <h2>About Eclip7e</h2>
+    <p>
+      Eclip7e is a collective memory and advocacy space created by Brii7e who refuse to let silence,
+      erasure, or injustice define the group we love. We believe RIIZE is 7, and that Seunghan's removal is
+      part of a larger failure in the way companies treat their artists and fans.
+      <br /><br />
+      This space is a home for expression, protest, and remembrance. It’s for the fans who still believe in healing
+      and in holding power accountable. Through letters, art, campaigns, and love, we build our archive of resistance
+      and community.
+      <br /><br />
+      Eclip7e exists to keep truth alive, to remember the past, protect the present, and reshape the future of RIIZE
+      as it was always meant to be.
+    </p>
+  </section>
+
+<!-- News and project updates -->
+<section id="news" class="news-section">
+  <h2>📢 News and project updates</h2>
+
+  <div class="news-item">
+    <h3>🌘 Eclip7e Fanbase Statement & Blog Launch</h3>
+    <p>
+      We have released our official fanbase statement reaffirming our commitment to justice for Seunghan and the full reinstatement of RIIZE as seven members. 
+      Alongside this, our fanbase blog is now live and will serve as the central hub for all fan projects, resources, and updates.  
+      <br><br>
+      <strong>Submission period for fanworks and contributions will open on July 1st and remain open till July 7th.</strong>  
+      After that, submissions will close for two weeks to allow for solo management, review, and upload of content.  
+      This cycle will repeat to ensure steady but manageable content updates.
+      <br><br>
+      Visit the blog here:  
+      <a href="https://eclip7e-project.github.io/ECLIP7E/" target="_blank" rel="noopener" style="color:#7b61ff;">https://eclip7e-project.github.io/ECLIP7E/</a>  
+      Please do not send submissions yet; further instructions will be provided when submission opens.
+    </p>
+  </div>
+  <div class="news-item">
+    <h3>📧 Email Campaigns to SM Entertainment & Media</h3>
+    <p><strong>Date:</strong> Starting July 3, 2025</p>
+    <p>
+      We will begin coordinated email campaigns targeting SM Entertainment executives and key media outlets to demand justice, accountability, and transparency regarding Seunghan’s situation. 
+      These emails are carefully drafted to call for Seunghan’s reinstatement, a public apology, and stronger protections for idols. 
+      Instructions and participation templates will be shared shortly.
+    </p>
+  </div>
+
+  <div class="news-item">
+    <h3>💌 Upcoming Fanletter Campaign</h3>
+    <p><strong>Date:</strong> July 10–17, 2025</p>
+    <p>
+      A global fanletter campaign will launch across Weverse, X (Twitter), and Instagram to show continued support for all seven RIIZE members, especially Seunghan.  
+      Fans are encouraged to write heartfelt letters, poems, or messages of hope and unity using specific hashtags to amplify our voice.  
+      Templates and detailed participation guidelines will be provided to help everyone join confidently and respectfully.
+    </p>
+  </div>
+</section>
+
+<style>
+  /* News Section Styles */
+  .news-section {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #121212;
+    border-radius: 10px;
+    color: #eee;
+    font-family: 'Arial', sans-serif;
+  }
+  .news-section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #7b61ff;
+    padding-bottom: 10px;
+  }
+  .news-item {
+    background: #1e1e1e;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(123, 97, 255, 0.3);
+  }
+  .news-item h3 {
+    margin-top: 0;
+    color: #7b61ff;
+  }
+  .news-item p {
+    line-height: 1.5;
+    font-size: 1rem;
+  }
+  a {
+    color: #7b61ff;
+    text-decoration: underline;
+  }
+
+  /* Navigation link styles */
+  nav ul {
+    display: flex;
+    gap: 15px;
+  }
+  nav a {
+    color: #ccc;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  nav a.active, nav a:hover {
+    background-color: #7b61ff;
+    color: #fff;
+  }
+</style>
+
+<script>
+  // Simple scroll spy to highlight nav links on scroll
+  document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('nav a');
+
+    function onScroll() {
+      let currentSectionId = '';
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 60;
+        if (window.scrollY >= sectionTop) {
+          currentSectionId = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentSectionId) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', onScroll);
+
+    // Run on page load
+    onScroll();
+  });
+</script>  
+
+  <section id="memories">
+    <h2>Shared Memories</h2>
+    <p>
+      Before the silence, there were smiles, laughter, and milestones that made us feel alive. This section is dedicated
+      to your most cherished memories with RIIZE as seven, comeback moments, fancalls, livestreams, lyrics that hit deep,(pre boycott)
+      or the first time you heard their voices. This is where we keep the joy close and the light alive. Every memory matters.
+    </p>
+  </section>
+
+  <section id="letters">
+    <h2>Letters to RII7E</h2>
+    <p>
+      A section dedicated to fan letters written to Seunghan, the other boys, or the fandom as a whole. Letters
+      of grief, celebration, or hope, your voice belongs here and will be displayed with care and dignity.
+    </p>
+  </section>
+
+  <section id="art">
+    <h2>Fan Works</h2>
+    <p>
+      This section includes drawings, edits, videos, banners, memes, music, and more. All submissions will be
+      reviewed and uploaded as a tribute to the creativity and dedication of ot7 supporters worldwide.
+    </p>
+  </section>
+ </script>
+  <section id="submit">
+    <h2>Submit Your Voice & Suggestions</h2>
+    <p>
+      Share your memories, letters, artworks, protest ideas, awareness campaigns, email templates, or fan projects.
+    </p>
+    <p>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSelyIdc0yzCH8xBjcePwVn2D86bEzYzes8SHpHmNFxJN5lyHA/viewform?usp=header" target="_blank" style="color:#fff; text-decoration: underline;">
+        Submit Your Voice Here
+      </a>
+    </p>
+  </section>
+  <section id="thanks">
+    <h2>Wall of Light</h2>
+    <p>
+      These are the voices and hearts behind Eclip7e. Every message, every image, every letter builds something beautiful.
+      Thank you for showing up, not just for Seunghan and RIIZE, but for each other.
+    </p>
+    <p style="margin-top: 1rem; font-style: italic; color: #ccc;">
+      When content is published, and the creator gives permission, their name or handle will be honored on this page.
+      This is our wall of light, built by all of us.
+    </p>
+  </section>
+</script>
+<div id="disqus_thread"></div>
+<script>
+  var disqus_config = function () {
+    this.page.url = window.location.href;  // current page URL
+    this.page.identifier = window.location.pathname; // unique page identifier
+  };
+
+  (function() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://eclip7e-project.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</body>
+</html>   

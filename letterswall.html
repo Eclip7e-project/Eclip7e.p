@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RII7E Letters Wall</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'Playfair Display', serif;
+  background-color:black;
+  background-image:url('https://www.transparenttextures.com/patterns/stardust.png');
+  color:white;
+  margin:0;
+  padding:0;
+  text-align:center;
+}
+
+/* HEADER */
+header { display:flex; flex-direction:column; align-items:center; background:black; border-bottom:2px solid gold; }
+header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2px solid gold; }
+.header-text { text-align:center; padding:20px; }
+.header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
+.header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
+
+/* WALL */
+section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
+.letter-card {
+  width:220px;
+  min-height:280px;
+  max-height:350px;
+  position:relative;
+  cursor:pointer;
+  border-radius:15px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#fefefe,#eee);
+  box-shadow:0 4px 10px rgba(0,0,0,0.5);
+  padding:10px;
+}
+.letter-card .text {
+  font-size:0.7rem;
+  line-height:1.2;
+  color:black;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  max-height:100%;
+  overflow-y:auto;
+}
+.top-letter { border:3px solid gold; box-shadow:0 0 15px gold; }
+
+/* MODAL */
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { position:relative; background:white; border-radius:15px; max-width:600px; width:90%; max-height:90%; overflow:auto; padding:20px; color:black; }
+#modal-text { font-size:1rem; white-space:pre-wrap; word-wrap:break-word; }
+#modal-author { font-size:0.85rem; color:gray; margin-top:10px; }
+#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
+#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+
+/* FOOTER */
+footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
+footer a { color:gold; text-decoration:none; }
+footer a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="antonbanner.jpg" alt="RII7E Banner" class="banner">
+  <div class="header-text">
+    <h1>RII7E Letters Wall</h1>
+    <p>All submitted letters for RII7E members. Click to read and show love ❤!</p>
+    <a href="index.html" style="color:gold; text-decoration:underline; margin-top:10px; display:inline-block;">← Back to Homepage</a>
+  </div>
+</header>
+
+<section class="wall" id="letters-wall"></section>
+
+<!-- Modal -->
+<div id="modal">
+  <div id="modal-content">
+    <button id="modal-close">X</button>
+    <div id="modal-text"></div>
+    <div id="modal-author"></div>
+    <div id="modal-buttons">
+      <button id="modal-like">❤ 0</button>
+      <button id="modal-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+<p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
+<img src="logo.jpg" alt="Logo" height="80">
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+// Firebase
+const firebaseConfig = {
+  apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
+  authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
+  projectId:"rii7e-sticky-notes-project",
+  storageBucket:"rii7e-sticky-notes-project.firebasestorage.app",
+  messagingSenderId:"962319162792",
+  appId:"1:962319162792:web:8fad2b11c316766c8a119d"
+};
+initializeApp(firebaseConfig);
+const db = getFirestore();
+
+const wall = document.getElementById('letters-wall');
+const modal = document.getElementById('modal');
+const modalText = document.getElementById('modal-text');
+const modalAuthor = document.getElementById('modal-author');
+const modalLike = document.getElementById('modal-like');
+const modalClose = document.getElementById('modal-close');
+const modalDelete = document.getElementById('modal-delete');
+
+let currentModalLetter = null;
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+
+// Open modal
+async function openModal(letter){
+  currentModalLetter = letter;
+  const docRef = doc(db,'letters','all','submittedLetters',letter.id);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()) currentModalLetter = {id: docSnap.id, ...docSnap.data()};
+
+  modalText.textContent = currentModalLetter.text;
+  modalAuthor.textContent = currentModalLetter.member ? `For: ${currentModalLetter.member}` : '';
+  modalLike.textContent = `❤ ${currentModalLetter.likes||0}`;
+  modalDelete.style.display = (currentModalLetter.creator === userId) ? 'inline-block' : 'none';
+  modal.style.display = 'flex';
+}
+
+// Close modal
+modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
+modal.onclick = ()=> modal.style.display='none';
+document.getElementById('modal-content').onclick = e=> e.stopPropagation();
+
+// Like button
+modalLike.onclick = async () => {
+  if(!currentModalLetter) return;
+  let liked = JSON.parse(localStorage.getItem('likedLetters')||'[]');
+  if(liked.includes(currentModalLetter.id)){ alert("Already liked!"); return; }
+  await updateDoc(doc(db,'letters','all','submittedLetters',currentModalLetter.id),{ likes:(currentModalLetter.likes||0)+1 });
+  currentModalLetter.likes = (currentModalLetter.likes||0)+1;
+  modalLike.textContent = `❤ ${currentModalLetter.likes}`;
+  liked.push(currentModalLetter.id);
+  localStorage.setItem('likedLetters', JSON.stringify(liked));
+};
+
+// Delete button
+modalDelete.onclick = async () => {
+  if(!currentModalLetter) return;
+  if(!confirm("Delete your letter?")) return;
+  await deleteDoc(doc(db,'letters','all','submittedLetters',currentModalLetter.id));
+  modal.style.display='none';
+};
+
+// Render letters
+function renderLetters(letters){
+  wall.innerHTML='';
+  let maxLikes=-1, topLetterId=null;
+
+  letters.forEach(n=>{
+    if((n.likes||0)>maxLikes){
+      maxLikes=n.likes||0;
+      topLetterId=n.id;
+    }
+  });
+
+  letters.forEach(n=>{
+    const div = document.createElement('div');
+    div.className='letter-card';
+    if(n.id===topLetterId) div.classList.add('top-letter');
+
+    const textDiv = document.createElement('div');
+    textDiv.className='text';
+    textDiv.textContent = n.text;
+
+    div.appendChild(textDiv);
+    div.onclick = ()=>openModal(n);
+    wall.appendChild(div);
+  });
+}
+
+// Firestore realtime
+const lettersCol = collection(db,'letters','all','submittedLetters');
+onSnapshot(lettersCol, snapshot=>{
+  const letters = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, member:d.data().member, ...d.data()}));
+  renderLetters(letters);
+});
+</script>
+</body>
+</html>

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RII7E Sticky Notes Project</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
-  <style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RII7E Sticky Notes Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
 :root {
   --gold: #d4af37;
   --bg: #000;
@@ -16,9 +16,6 @@
 body {
   font-family: 'Playfair Display', serif;
   background-color: var(--bg);
-  background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-  background-repeat: repeat;
-  background-attachment: fixed;
   color: white;
   margin: 0;
   padding: 0;
@@ -92,7 +89,7 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
 @media (max-width:800px){
   .modal-grid{grid-template-columns:1fr; max-height:85vh; overflow:auto}
 }
-  </style>
+</style>
 </head>
 <body>
 
@@ -113,8 +110,6 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
   <a href="#">SEUNGHAN</a>
   <a href="#">SOHEE</a>
   <a href="#">ANTON</a>
-  <a href="#">RII7E</a>
-  <a href="#">BRII7E</a>
   <a href="#">LETTERS</a>
 </nav>
 
@@ -124,18 +119,11 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
   <p>Each note left here is a memory, a message, and a promise. 🧡</p>
 </div>
 
-<!-- Members Section -->
 <section id="members-section" class="member-section">
   <h3>MEMBER NOTES</h3>
-  <div class="wall" id="members-wall">
-    <!-- Example sticky notes, can be replaced dynamically -->
-    <div class="sticky-note"><div class="label">SHOTARO</div></div>
-    <div class="sticky-note"><div class="label">EUNSEOK</div></div>
-    <div class="sticky-note"><div class="label">SUNGCHAN</div></div>
-  </div>
+  <div class="wall" id="members-wall"></div>
 </section>
 
-<!-- Letters Section -->
 <section id="letters-section" class="member-section">
   <h3>LETTERS</h3>
   <div class="wall" id="letters-wall"></div>
@@ -179,11 +167,9 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
 </div>
 
 <script type="module">
-// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain: "rii7e-sticky-notes-project.firebaseapp.com",
@@ -192,7 +178,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// DOM
+const members = ["SHOTARO","EUNSEOK","SUNGCHAN","WONBIN","SEUNGHAN","SOHEE","ANTON"];
+const membersWall = document.getElementById('members-wall');
+const lettersWall = document.getElementById('letters-wall');
+
 const modal = document.getElementById('modal');
 const modalClose = document.getElementById('modal-close');
 const modalCancel = document.getElementById('modal-cancel');
@@ -202,79 +191,60 @@ const previewText = document.getElementById('preview-text');
 const noteText = document.getElementById('note-text');
 const colorPicker = document.getElementById('color-picker');
 const letterAuthorInput = document.getElementById('letter-author');
-const lettersWall = document.getElementById('letters-wall');
+const modalMemberTitle = document.getElementById('modal-member');
 
-let currentImg = 'letter-placeholder.png';
+let currentMember = null;
 
-// Show modal for letters
-function openModalForLetter() {
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  noteText.value = '';
-  previewText.textContent = '';
-  noteText.maxLength = 1000;
-  noteText.style.textAlign = 'center';
-  previewText.style.textAlign = 'center';
-  letterAuthorInput.style.display = 'block';
-  modalImg.src = currentImg;
-}
-function closeModal() {
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
+// Generate member sticky notes
+members.forEach(name=>{
+  const note = document.createElement('div');
+  note.className = 'sticky-note';
+  note.innerHTML = `<div class="label">${name}</div>`;
+  note.onclick = ()=>{
+    currentMember = name;
+    modalMemberTitle.textContent = `Write your message for ${name}`;
+    modalImg.src = 'letter-placeholder.png';
+    previewText.textContent = '';
+    noteText.value = '';
+    letterAuthorInput.value = '';
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+  membersWall.appendChild(note);
+});
 
-// Update preview in real time
-noteText.addEventListener('input', e => previewText.textContent = e.target.value);
-colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
+modalClose.onclick = modalCancel.onclick = ()=>{
+  modal.style.display='none';
+  document.body.style.overflow='';
+};
+window.addEventListener('keydown', e=>{if(e.key==='Escape'){modal.style.display='none'; document.body.style.overflow='';}});
 
-modalClose.onclick = closeModal;
-modalCancel.onclick = closeModal;
-window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+noteText.addEventListener('input', e=> previewText.textContent = e.target.value);
+colorPicker.addEventListener('input', e=> previewText.style.color = e.target.value);
 
-// Submit letter
-modalSubmit.addEventListener('click', async () => {
+modalSubmit.addEventListener('click', async ()=>{
   const text = noteText.value.trim();
   if(!text){ alert('Write something!'); return; }
   const color = colorPicker.value || '#000';
   const author = letterAuthorInput.value.trim() || 'Anonymous';
-
-  const noteData = {
-    img: currentImg,
-    text,
-    color,
-    author,
-    timestamp: Date.now()
-  };
-  try{
-    await addDoc(collection(db,'letters'), noteData);
-    closeModal();
-  }catch(err){
-    console.error(err);
-    alert('Error submitting letter.');
-  }
+  const noteData = { member: currentMember, text, color, author, timestamp: Date.now() };
+  try{ await addDoc(collection(db,'letters'),noteData); modal.style.display='none'; document.body.style.overflow=''; }
+  catch(e){console.error(e); alert('Error submitting note');}
 });
 
-// Render letters wall in real time
-onSnapshot(collection(db,'letters'), snapshot => {
-  lettersWall.innerHTML = '';
-  snapshot.docs.forEach(docSnap => {
-    const data = docSnap.data();
+// Realtime letters rendering
+onSnapshot(collection(db,'letters'), snapshot=>{
+  lettersWall.innerHTML='';
+  snapshot.docs.sort((a,b)=>a.data().timestamp - b.data().timestamp).forEach(doc=>{
+    const data = doc.data();
     const noteDiv = document.createElement('div');
-    noteDiv.className = 'sticky-note letter-note';
-    noteDiv.style.border = '4px solid #FFA500';
-    noteDiv.innerHTML = `
-      <div class="label" style="color:${data.color || '#000'}">${data.text}</div>
-      <div style="font-size:0.8rem; margin-top:6px; color:#555;">— ${data.author || 'Anonymous'}</div>
-    `;
-    noteDiv.onclick = openModalForLetter;
+    noteDiv.className='sticky-note letter-note';
+    noteDiv.style.border='4px solid #FFA500';
+    noteDiv.innerHTML=`<div class="label" style="color:${data.color||'#000'}">${data.text}</div>
+      <div style="font-size:0.8rem;margin-top:6px;color:#555;">— ${data.author||'Anonymous'}</div>`;
     lettersWall.appendChild(noteDiv);
   });
 });
-
-// Open modal on page load for testing (optional)
-openModalForLetter();
 </script>
-
 </body>
 </html>
-

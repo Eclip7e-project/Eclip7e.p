@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -65,10 +65,10 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
   flex-direction: column;
   justify-content: center;
   align-items: center;
-}
-.letter-note .label {
   text-align: center;
-  font-size: 0.9rem;
+}
+
+.letter-note .label {
   white-space: pre-wrap;
 }
 
@@ -84,6 +84,7 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
 .modal-right label{display:block;margin-top:8px;font-weight:600}
 .modal-right textarea{width:100%;min-height:120px;padding:8px;border-radius:8px;border:1px solid #ccc;resize:none}
 .modal-right input[type="color"]{height:40px;width:56px;border:none;padding:0;margin-top:6px}
+.modal-right input[type="text"]{height:36px;border:1px solid #ccc;border-radius:6px;padding:6px;width:100%;margin-bottom:8px}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
 .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
 .btn-submit{background:var(--gold);font-weight:700}
@@ -123,6 +124,18 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
   <p>Each note left here is a memory, a message, and a promise. 🧡</p>
 </div>
 
+<!-- Members Section -->
+<section id="members-section" class="member-section">
+  <h3>MEMBER NOTES</h3>
+  <div class="wall" id="members-wall">
+    <!-- Example sticky notes, can be replaced dynamically -->
+    <div class="sticky-note"><div class="label">SHOTARO</div></div>
+    <div class="sticky-note"><div class="label">EUNSEOK</div></div>
+    <div class="sticky-note"><div class="label">SUNGCHAN</div></div>
+  </div>
+</section>
+
+<!-- Letters Section -->
 <section id="letters-section" class="member-section">
   <h3>LETTERS</h3>
   <div class="wall" id="letters-wall"></div>
@@ -145,10 +158,10 @@ h2{color:var(--gold); text-align:center; margin:8px 0 18px;}
         </div>
       </div>
       <div class="modal-right">
-        <h3 id="modal-member">Member</h3>
+        <h3 id="modal-member">Write your message</h3>
 
-        <label for="letter-author" id="letter-author-label" style="display:none">Your name (optional)</label>
-        <input type="text" id="letter-author" placeholder="Anonymous" style="width:100%; padding:6px; border-radius:6px; margin-bottom:8px; display:none;">
+        <label for="letter-author" id="letter-author-label">Your name (optional)</label>
+        <input type="text" id="letter-author" placeholder="Anonymous">
 
         <label>Text color</label>
         <input id="color-picker" type="color" value="#000000">
@@ -189,15 +202,12 @@ const previewText = document.getElementById('preview-text');
 const noteText = document.getElementById('note-text');
 const colorPicker = document.getElementById('color-picker');
 const letterAuthorInput = document.getElementById('letter-author');
-const letterAuthorLabel = document.getElementById('letter-author-label');
 const lettersWall = document.getElementById('letters-wall');
 
 let currentImg = 'letter-placeholder.png';
-let currentMode = 'letter';
 
 // Show modal for letters
 function openModalForLetter() {
-  currentMode = 'letter';
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
   noteText.value = '';
@@ -206,7 +216,6 @@ function openModalForLetter() {
   noteText.style.textAlign = 'center';
   previewText.style.textAlign = 'center';
   letterAuthorInput.style.display = 'block';
-  letterAuthorLabel.style.display = 'block';
   modalImg.src = currentImg;
 }
 function closeModal() {
@@ -262,9 +271,10 @@ onSnapshot(collection(db,'letters'), snapshot => {
   });
 });
 
-// Initialize letters modal
+// Open modal on page load for testing (optional)
 openModalForLetter();
 </script>
 
 </body>
 </html>
+

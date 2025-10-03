@@ -722,6 +722,20 @@ modalSubmit.addEventListener('click', async ()=>{
     creator: userId
   };
 
+
+
+console.log({
+  img: currentLetterImg,
+  text,
+  color,
+  name,
+  creator: userLetterId
+});
+
+
+
+
+ 
   try{
     await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
@@ -880,4 +894,5 @@ onSnapshot(collection(db,'letters'), snap => {
 
 </body>
 </html> 
+
 

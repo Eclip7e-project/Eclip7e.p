@@ -126,33 +126,6 @@ body {
 
 
      
-
-
-
-
-#letter-preview-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  white-space: pre-wrap; /* preserves line breaks */
-}
-
-#letter-preview-text {
-  font-size: 0.7rem;   /* slightly smaller */
-  line-height: 1.25;   /* tighter line spacing */
-  max-width: 85%;      /* leave more margin */
-  max-height: 80%;     /* keep inside the letter design */
-  overflow-y: auto;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  text-align: center;  /* center text inside letter */
-}
-
-
      
   </style>
 </head>
@@ -177,7 +150,6 @@ body {
   <a href="anton.html">ANTON</a>
   <a href="rii7e.html">RII7E</a>
   <a href="brii7e.html">BRII7E</a>
-  <a href="letterswall.html">LETTERS</a>
   <a href="favorites.html">FAVORITES</a>
   <a href="gallery.html">GALLERY</a>
 </nav>
@@ -233,76 +205,17 @@ body {
     <h3>BRII7E</h3>
     <div class="wall" data-member="brii7e"></div>
   </div>
+<div class="member-section" id="letters-selection">
+  <h3>LETTERS</h3>
+  <div class="wall" data-member="letters"></div>
+</div>
 
+ 
   <div class="member-section" id="simple-notes">
     <h3>Simple Sticky Notes</h3>
     <p style="max-width:720px;margin:6px auto 12px;color:#ddd;">Prefer something minimal? Click a plain one-color sticky note, pick a member, choose your text color, and write your message, you'll preview the text on the note in real time.</p>
     <div class="wall" id="simple-note-wall"></div>
   </div>
-
-<div class="member-section" id="letter-selection">
-    <h3>LETTERS</h3>
-    <div class="wall" data-member="letters"></div>
-  </div>
-
-<section id="letter-wall" style="margin-top:40px;">
-  <h2>Letters</h2>
-
-  <div id="letter-designs" class="wall" style="justify-content:flex-start; flex-wrap:wrap; gap:15px; padding:10px;">
-    <!-- Example placeholder designs -->
-    <div class="sticky-note letter-design" data-id="letter1"><img src="letter1.png" alt="Letter 1"></div>
-    <div class="sticky-note letter-design" data-id="letter2"><img src="letter2.png" alt="Letter 2"></div>
-    <div class="sticky-note letter-design" data-id="letter3"><img src="letter3.png" alt="Letter 3"></div>
-    <div class="sticky-note letter-design" data-id="letter4"><img src="letter4.png" alt="Letter 4"></div>
-    <div class="sticky-note letter-design" data-id="letter5"><img src="letter5.png" alt="Letter 5"></div>
-    <div class="sticky-note letter-design" data-id="letter6"><img src="letter6.png" alt="Letter 6"></div>
-    <div class="sticky-note letter-design" data-id="letter7"><img src="letter7.png" alt="Letter 7"></div>
-
-
-
-
-  </div>
-
-  <div style="margin-top:12px;">
-    <label>Upload Your Own Letter Design:</label>
-    <input type="file" id="letter-upload" accept="image/*">
-    <button id="submit-letter-design" class="btn btn-submit">Upload Design</button>
-  </div>
-
-  <div id="letters-container" style="margin-top:20px; display:flex; flex-wrap:wrap; gap:12px;">
-    <!-- Submitted letters will appear here -->
-  </div>
-</section>
-
-<!-- Letter Modal -->
-<div id="letter-modal" class="modal" aria-hidden="true">
-  <div class="modal-content" role="dialog" aria-modal="true">
-    <span class="close" id="letter-modal-close" title="Close">&times;</span>
-    <div class="modal-grid">
-      <div class="modal-left" id="letter-modal-left">
-        <img id="letter-modal-img" src="" alt="Selected letter design">
-        <div class="preview-overlay" id="letter-preview-overlay">
-          <div class="preview-text" id="letter-preview-text"></div>
-        </div>
-      </div>
-      <div class="modal-right">
-        <label>Text Color</label>
-        <input type="color" id="letter-color" value="#ffffff">
-        <label>Display Name (optional)</label>
-        <input type="text" id="letter-name" placeholder="Your name (leave blank for anonymous)">
-        <label style="margin-top:10px">Write Your Letter</label>
-        <textarea id="letter-textarea" rows="10" maxlength="1000" placeholder="Write your letter here..."></textarea>
-        <div class="modal-actions">
-          <button class="btn btn-cancel" id="letter-modal-cancel">Cancel</button>
-          <button class="btn btn-submit" id="letter-modal-submit">Submit</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 </section>
 
 <section id="design-submission" style="margin-top:36px;">
@@ -503,6 +416,13 @@ const closeModal = () => {
   document.body.style.overflow = '';
 };
 
+
+<label for="letter-author">Your name (optional)</label>
+<input type="text" id="letter-author" placeholder="Anonymous" style="width:100%; padding:6px; border-radius:6px; margin-bottom:8px;">
+
+
+ 
+
 noteText.addEventListener('input', e => previewText.textContent = e.target.value);
 colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
 modalClose.onclick = closeModal;
@@ -611,6 +531,95 @@ function renderMemberWall(memberName){
 }
 
 
+function renderLettersWall(){
+  const wall = document.querySelector('#letters-selection .wall');
+  if(!wall) return;
+  wall.innerHTML = '';
+
+  const lettersCol = collection(db,'letters');
+  onSnapshot(lettersCol, snapshot => {
+    wall.innerHTML = '';
+
+    snapshot.docs.forEach(docSnap => {
+      const data = docSnap.data();
+
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'sticky-note';
+      noteDiv.style.border = '4px solid #FFA500';
+      noteDiv.style.padding = '12px';  // smaller margins
+      noteDiv.style.minHeight = '160px';
+      noteDiv.style.display = 'flex';
+      noteDiv.style.flexDirection = 'column';
+      noteDiv.style.justifyContent = 'center';
+      noteDiv.style.alignItems = 'center';
+
+      noteDiv.innerHTML = `
+        <div class="label" style="color:${data.color || '#000'}; text-align:center; font-size:0.9rem; white-space:pre-wrap;">${data.text}</div>
+        <div style="font-size:0.8rem; margin-top:8px; color:#555;">— ${data.author || 'Anonymous'}</div>
+      `;
+
+      noteDiv.onclick = () => openModalForLetter(); // optionally allow editing
+      wall.appendChild(noteDiv);
+    });
+  });
+}
+
+modalSubmit.addEventListener('click', async () => {
+  const text = noteText.value.trim();
+  if (!text) { alert('Write something!'); return; }
+
+  const color = colorPicker.value || '#000';
+  const week = getCurrentWeek();
+  const member = currentMode === 'simple' ? memberSelect.value
+               : currentMode === 'letter' ? 'letters'
+               : currentMember;
+
+  const noteData = {
+    img: currentImg,
+    text,
+    color,
+    likes: 0,
+    week,
+    timestamp: Date.now(),
+    creator: userId
+  };
+
+  try {
+    if (currentMode === 'letter') {
+      await addDoc(collection(db, 'letters'), noteData);
+      closeModal();
+      alert('Your letter has been submitted to the Letters wall!');
+    } else {
+      await addDoc(collection(db, 'notes', member, 'memberNotes'), noteData);
+      closeModal();
+      alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error submitting note.');
+  }
+});
+const letterAuthorInput = $('#letter-author');
+
+const openModalForLetter = () => {
+  currentMember = 'letters';
+  currentImg = 'letter-placeholder.png';
+  currentMode = 'letter';
+  setupModal();
+
+  noteText.value = '';
+  noteText.maxLength = 1000;
+  noteText.style.textAlign = 'center';
+  previewText.textContent = '';
+  previewText.style.textAlign = 'center';
+  letterAuthorInput.value = '';
+  letterAuthorInput.style.display = 'block';
+  memberSelect.style.display = 'none';
+  memberSelectLabel.style.display = 'none';
+  modalMemberTitle.textContent = 'Letters';
+};
+
+ 
 // ----------------- Simple Notes -----------------
 function renderSimpleNotes(){
   const wall = $('#simple-note-wall');
@@ -704,195 +713,52 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-modalSubmit.addEventListener('click', async ()=>{
+modalSubmit.addEventListener('click', async () => {
   const text = noteText.value.trim();
-  if(!text){ alert('Write something!'); return; }
+  if (!text) { alert('Write something!'); return; }
 
   const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
-  const member = currentMode==='simple'?memberSelect.value:currentMember;
+  const author = letterAuthorInput.value.trim() || 'Anonymous';
 
-  const noteData = {
-    img: currentImg,
-    text,
-    color,
-    likes: 0,
-    week,
-    timestamp: Date.now(),
-    creator: userId
-  };
+  if(currentMode === 'letter'){
+    const letterData = {
+      img: currentImg,
+      text,
+      color,
+      author,
+      likes: 0,
+      week,
+      timestamp: Date.now(),
+      creator: userId
+    };
 
-
-
-console.log({
-  img: currentLetterImg,
-  text,
-  color,
-  name,
-  creator: userLetterId
+    try {
+      await addDoc(collection(db,'letters'), letterData);
+      closeModal();
+      alert('Your letter has been submitted!');
+    } catch(err) {
+      console.error(err);
+      alert('Error submitting letter.');
+    }
+  } else {
+    // existing note submission logic...
+  }
 });
 
 
 
 
  
-  try{
-    await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
-    closeModal();
-    alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
-  }catch(err){
-    console.error(err);
-    alert('Error submitting note.');
-  }
-});
-
 // ----------------- Initialize -----------------
 renderPickSection();
 setupPickFanDesignsRealtime();
 renderSimpleNotes();
 members.forEach(m => renderMemberWall(m.name));
 setupManageDesignsRealtime();
+ renderLettersWall(); // <-- new
 
-
-
-
-// ----------------- Letter Wall -----------------
-const letterDesigns = document.querySelectorAll('.letter-design');
-const letterUpload = document.getElementById('letter-upload');
-const submitLetterDesign = document.getElementById('submit-letter-design');
-const lettersContainer = document.getElementById('letters-container');
-
-const letterModal = document.getElementById('letter-modal');
-const letterModalClose = document.getElementById('letter-modal-close');
-const letterModalCancel = document.getElementById('letter-modal-cancel');
-const letterModalImg = document.getElementById('letter-modal-img');
-const letterPreviewText = document.getElementById('letter-preview-text');
-const letterColor = document.getElementById('letter-color');
-const letterTextarea = document.getElementById('letter-textarea');
-const letterName = document.getElementById('letter-name');
-const letterModalSubmit = document.getElementById('letter-modal-submit');
-
-let currentLetterImg = '';
-const userLetterId = localStorage.getItem('userLetterId') || crypto.randomUUID();
-localStorage.setItem('userLetterId', userLetterId);
-
-// Open modal when design is clicked
-letterDesigns.forEach(design => {
-  design.addEventListener('click', () => {
-    currentLetterImg = design.querySelector('img').src;
-    letterModalImg.src = currentLetterImg;
-    letterTextarea.value = '';
-    letterPreviewText.textContent = '';
-    letterPreviewText.style.color = letterColor.value;
-    letterName.value = '';
-    letterModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  });
-});
-
-// Live preview
-letterTextarea.addEventListener('input', e => {
-  letterPreviewText.textContent = e.target.value;
-  letterPreviewText.style.fontSize = '0.8rem'; // small font for long letters
-});
-
-// Close modal
-const closeLetterModal = () => {
-  letterModal.style.display = 'none';
-  document.body.style.overflow = '';
-};
-letterModalClose.onclick = closeLetterModal;
-letterModalCancel.onclick = closeLetterModal;
-window.addEventListener('keydown', e => { if(e.key==='Escape') closeLetterModal(); });
-
-// Submit letter
-letterModalSubmit.addEventListener('click', async () => {
-  const text = letterTextarea.value.trim();
-  if(!text){ alert('Please write a letter!'); return; }
-  const color = letterColor.value;
-  const name = letterName.value.trim() || 'Anonymous';
-
-  try{
-    await addDoc(collection(db,'letters'), {
-      img: currentLetterImg,
-      text,
-      color,
-      name,
-      creator: userLetterId,
-      timestamp: Date.now()
-    });
-    closeLetterModal();
-  }catch(err){
-    console.error(err);
-    alert('Error submitting letter.');
-  }
-});
-
-// Real-time render letters
-onSnapshot(collection(db,'letters'), snap => {
-  lettersContainer.innerHTML = '';
-  snap.docs.forEach(docSnap => {
-    const data = docSnap.data();
-    const div = document.createElement('div');
-    div.className = 'sticky-note';
-    div.style.width = '180px';
-    div.style.height = '280px';
-    div.style.border = '3px solid gold';
-    div.style.position = 'relative';
-    div.style.overflow = 'hidden';
-    div.style.display = 'flex';
-    div.style.alignItems = 'center';
-    div.style.justifyContent = 'center';
-    div.style.textAlign = 'center';
-    div.style.padding = '10px';
-    div.style.boxSizing = 'border-box';
-
-    const img = document.createElement('img');
-    img.src = data.img;
-    img.style.position = 'absolute';
-    img.style.top = '0';
-    img.style.left = '0';
-    img.style.width = '100%';
-    img.style.height = '100%';
-    img.style.objectFit = 'cover';
-    img.style.zIndex = '0';
-
-    const textDiv = document.createElement('div');
-    textDiv.textContent = data.text;
-    textDiv.style.color = data.color;
-    textDiv.style.fontSize = '0.75rem';
-    textDiv.style.fontWeight = '600';
-    textDiv.style.zIndex = '1';
-    textDiv.style.whiteSpace = 'pre-wrap';
-    textDiv.style.wordWrap = 'break-word';
-    textDiv.style.overflowY = 'auto';
-    textDiv.style.maxHeight = '90%';
-
-    div.appendChild(img);
-    div.appendChild(textDiv);
-
-    // Optional: display name at bottom
-    const nameDiv = document.createElement('div');
-    nameDiv.textContent = data.name;
-    nameDiv.style.position = 'absolute';
-    nameDiv.style.bottom = '4px';
-    nameDiv.style.left = '0';
-    nameDiv.style.right = '0';
-    nameDiv.style.fontSize = '0.6rem';
-    nameDiv.style.color = '#fff';
-    nameDiv.style.textAlign = 'center';
-    nameDiv.style.background = 'rgba(0,0,0,0.4)';
-    nameDiv.style.zIndex = '2';
-    div.appendChild(nameDiv);
-
-    lettersContainer.appendChild(div);
-  });
-});
-
-   
 </script>
 
 </body>
 </html> 
-
-

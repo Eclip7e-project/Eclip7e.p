@@ -134,7 +134,9 @@ footer a:hover { text-decoration:underline; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
+const auth = getAuth();
+signInAnonymously(auth).catch(console.error);
+  
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -283,19 +285,16 @@ async function loadComments(){
   });
 }
 
-// Submit comment
-submitComment.onclick = async ()=>{
-  const text = commentInput.value.trim();
-  if(!text || !currentModalNote) return;
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  await addDoc(commentsCol,{
-    text,
-    username,
-    creator:userId,
-    timestamp: new Date()
-  });
-  commentInput.value='';
-};
+// Then, in submitComment:
+const user = auth.currentUser;
+if(!user) return alert("Not signed in!");
+await addDoc(commentsCol, {
+  text,
+  username,
+  creator: user.uid,   // ✅ matches rules
+  timestamp: new Date()
+});
 </script>
 </body>
 </html>
+

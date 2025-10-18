@@ -26,24 +26,21 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,0.5); background:white; }
+.sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:10px;
+  top:0; left:0; right:0; bottom:0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  text-align:center;
   color:black;
   font-size:0.8rem;
   white-space:pre-wrap;
   word-break:break-word;
-  text-align:center;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  background:rgba(255,255,255,0.6);
+  pointer-events:none;
+  padding:10px;
 }
 
 /* Highlight top note */
@@ -59,13 +56,15 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 #modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
 #modal-text { 
   position:absolute; 
-  top:0; left:0; right:0; bottom:0; 
-  padding:10px;
-  color:black; font-size:1rem; 
-  white-space:pre-wrap; word-wrap:break-word; 
-  text-align:center; display:flex;
-  align-items:flex-end; justify-content:center;
+  top:0; left:0; right:0; bottom:0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  text-align:center;
+  color:black; font-size:0.8rem; 
+  white-space:pre-wrap; word-break:break-word; 
   pointer-events:none; text-shadow:1px 1px 3px white;
+  padding:10px;
 }
 
 /* Buttons under image */
@@ -147,8 +146,8 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
-// Owner ID (your userId)
-const OWNER_ID = "cris_owner_001"; // replace with your UUID
+// Owner ID
+const OWNER_ID = "cris_owner_001";
 
 // Username
 let username = localStorage.getItem('username');
@@ -176,7 +175,7 @@ let currentModalNote = null;
 // ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'letters',note.id);
+  const docRef = doc(db,'notes','letters','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
@@ -184,11 +183,9 @@ async function openModal(note){
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-
-  // Show delete button for creator or owner
   modalDelete.style.display = (currentModalNote.creator === userId || userId === OWNER_ID) ? 'inline-block' : 'none';
-
   modal.style.display = 'flex';
+
   loadComments();
 }
 
@@ -201,7 +198,7 @@ modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'letters',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
@@ -212,7 +209,7 @@ modalLike.onclick = async () => {
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'letters',currentModalNote.id));
+  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
@@ -224,24 +221,25 @@ function renderNotes(notes){
     div.className='sticky-note';
 
     const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    imgEl.src=n.img; imgEl.alt='Letter';
 
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent=n.text;
-    textDiv.style.color = n.color || 'black';
+    textDiv.style.color=n.color || 'black';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
+
     div.onclick = ()=>openModal(n);
 
     wall.appendChild(div);
   });
 }
 
-// ----------------- Firestore real-time letters -----------------
-const lettersCol = collection(db,'letters');
-onSnapshot(lettersCol, snapshot=>{
+// ----------------- Firestore real-time notes -----------------
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot=>{
   const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
 });
@@ -249,7 +247,7 @@ onSnapshot(lettersCol, snapshot=>{
 // ----------------- Comments -----------------
 async function loadComments(){
   commentsList.innerHTML='';
-  const commentsCol = collection(db,'letters',currentModalNote.id,'comments');
+  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
   onSnapshot(q, snapshot=>{
     commentsList.innerHTML='';
@@ -262,15 +260,17 @@ async function loadComments(){
       if(data.creator === userId || userId === OWNER_ID){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
-        editBtn.onclick=async ()=>{
+        editBtn.onclick = async ()=>{
           const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id),{text:newText});
+          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
         };
+
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{
-          if(confirm('Delete comment?')) await deleteDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id));
+        delBtn.onclick = async ()=>{
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
+
         div.appendChild(editBtn);
         div.appendChild(delBtn);
       }
@@ -283,7 +283,7 @@ async function loadComments(){
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text) return;
-  const commentsCol = collection(db,'letters',currentModalNote.id,'comments');
+  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
   await addDoc(commentsCol,{
     text,
     username,

@@ -400,6 +400,15 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
+  // ✅ Set text limit dynamically
+  if(currentMember === 'letters'){
+    noteText.maxLength = 2000;
+    noteText.placeholder = "Write your letter (max 2000 chars)";
+  } else {
+    noteText.maxLength = 300;
+    noteText.placeholder = "Write your message (max 300 chars)";
+  }
+
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -415,16 +424,6 @@ function setupModal() {
   document.body.style.overflow = 'hidden';
 }
 
-const closeModal = () => {
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-};
-
-noteText.addEventListener('input', e => previewText.textContent = e.target.value);
-colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-modalClose.onclick = closeModal;
-modalCancel.onclick = closeModal;
-window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
 // ----------------- Open Modal -----------------
 const openModalForMember = (memberName, imgSrc) => {
@@ -685,3 +684,4 @@ renderLettersSection();
 
 </body>
 </html> 
+

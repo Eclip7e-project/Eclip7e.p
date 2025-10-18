@@ -246,9 +246,15 @@ async function loadComments(){
       if(data.creator === userId || userId === "cris_owner_001"){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
+        editBtn.onclick=async ()=>{
+          const newText = prompt('Edit comment:', data.text);
+          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
+        };
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{ ... }
+        delBtn.onclick=async ()=>{
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
+        };
         div.appendChild(editBtn);
         div.appendChild(delBtn);
       }
@@ -257,6 +263,7 @@ async function loadComments(){
     });
   });
 }
+
 
     // auto-scroll to bottom on new comments
     commentsList.scrollTop = commentsList.scrollHeight;
@@ -289,5 +296,6 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 

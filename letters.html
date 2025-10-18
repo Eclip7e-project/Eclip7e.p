@@ -28,7 +28,6 @@ header img.banner {
   width:100%;
   height:auto;
   object-fit:contain;
-  border-bottom:2px solid gold;
 }
 .header-text {
   text-align:center;
@@ -52,17 +51,18 @@ header img.banner {
 section.wall {
   display:flex;
   flex-wrap:wrap;
-  justify-content:flex-start;
+  justify-content:center;
   gap:20px;
   padding:40px;
 }
 .sticky-note {
-  width:200px;
-  height:200px;
+  width:150px;
+  height:250px; /* portrait */
   position:relative;
   cursor:pointer;
   border-radius:15px;
   overflow:hidden;
+  background:#fff;
 }
 .sticky-note img {
   width:100%;
@@ -94,18 +94,21 @@ section.wall {
   justify-content:center;
   align-items:center;
   z-index:1000;
+  padding:10px;
 }
 #modal-content {
   position:relative;
   background:transparent;
   border-radius:15px;
-  max-width:500px;
-  width:90%;
+  max-width:90%;
+  width:auto;
   max-height:90%;
   overflow:auto;
 }
 #modal-img {
   width:100%;
+  max-height:80vh;
+  object-fit:contain;
   border-radius:15px;
   display:block;
 }
@@ -177,6 +180,7 @@ section.wall {
   padding:5px 0;
   display:flex;
   justify-content:space-between;
+  align-items:center;
 }
 .comment:last-child {
   border-bottom:none;
@@ -261,9 +265,7 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { 
-  getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // Firebase setup
 const firebaseConfig = {
@@ -277,8 +279,8 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// Owner ID
-const OWNER_ID = "cris_owner_001";
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -291,10 +293,9 @@ const commentForm = document.getElementById('comment-form');
 const commentInput = document.getElementById('comment-input');
 
 let currentLetter = null;
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
-// Fetch all letters in real-time
-const lettersCol = collection(db, "notes", "letters", "memberNotes");
+// Load letters in real-time
+const lettersCol = collection(db,"notes","letters","memberNotes");
 onSnapshot(lettersCol, snapshot=>{
   wall.innerHTML="";
   snapshot.docs.forEach(docSnap=>{
@@ -302,25 +303,23 @@ onSnapshot(lettersCol, snapshot=>{
     const note = document.createElement('div');
     note.className="sticky-note";
     note.innerHTML = `<img src="${data.img}"><div class="text">${data.text}</div>`;
-    note.onclick = ()=>{
-      openModal(docSnap.id, data);
-    };
+    note.onclick = ()=> openModal(docSnap.id,data);
     wall.appendChild(note);
   });
 });
 
-// Open Modal
+// Open modal
 function openModal(id,data){
-  currentLetter = {id,data};
-  modalImg.src = data.img;
-  modalText.textContent = data.text;
+  currentLetter={id,data};
+  modalImg.src=data.img;
+  modalText.textContent=data.text;
   modal.style.display="flex";
-  modalLike.textContent = `❤ ${data.likes || 0}`;
+  modalLike.textContent=`❤ ${data.likes||0}`;
   modalDelete.style.display = data.creator===userId?"inline-block":"none";
   loadComments(id);
 }
 
-// Close Modal
+// Close modal
 modalClose.onclick = ()=>{ modal.style.display="none"; commentsDiv.innerHTML=""; };
 window.onclick = e=>{ if(e.target===modal) modal.style.display="none"; };
 
@@ -380,6 +379,7 @@ commentForm.addEventListener('submit', async e=>{
   });
   commentInput.value="";
 });
+
 </script>
 </body>
 </html>

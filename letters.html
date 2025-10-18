@@ -30,17 +30,16 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:0; left:0; right:0; bottom:0;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  text-align:center;
+  top:2.3cm;
+  left:4.6cm;
+  right:4.3cm;
   color:black;
-  font-size:0.8rem;
+  font-size:0.7rem;
   white-space:pre-wrap;
-  word-break:break-word;
+  word-wrap:break-word;
+  text-align:center;
   pointer-events:none;
-  padding:10px;
+  text-shadow:1px 1px 3px white;
 }
 
 /* Highlight top note */
@@ -56,15 +55,10 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 #modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
 #modal-text { 
   position:absolute; 
-  top:0; left:0; right:0; bottom:0;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  text-align:center;
-  color:black; font-size:0.8rem; 
-  white-space:pre-wrap; word-break:break-word; 
-  pointer-events:none; text-shadow:1px 1px 3px white;
-  padding:10px;
+  top:2.3cm; left:4.6cm; right:4.3cm; 
+  color:black; font-size:0.7rem; 
+  white-space:pre-wrap; word-wrap:break-word; 
+  text-align:center; pointer-events:none; text-shadow:1px 1px 3px white;
 }
 
 /* Buttons under image */
@@ -147,7 +141,7 @@ const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
 // Owner ID
-const OWNER_ID = "cris_owner_001";
+const OWNER_ID = "cris_owner_001"; 
 
 // Username
 let username = localStorage.getItem('username');
@@ -183,9 +177,11 @@ async function openModal(note){
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-  modalDelete.style.display = (currentModalNote.creator === userId || userId === OWNER_ID) ? 'inline-block' : 'none';
-  modal.style.display = 'flex';
 
+  // Show delete button for creator OR owner
+  modalDelete.style.display = (currentModalNote.creator === userId || OWNER_ID === userId) ? 'inline-block' : 'none';
+
+  modal.style.display = 'flex';
   loadComments();
 }
 
@@ -221,16 +217,15 @@ function renderNotes(notes){
     div.className='sticky-note';
 
     const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Letter';
+    imgEl.src=n.img; imgEl.alt='Note';
 
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent=n.text;
-    textDiv.style.color=n.color || 'black';
+    textDiv.style.color = n.color || 'black';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-
     div.onclick = ()=>openModal(n);
 
     wall.appendChild(div);
@@ -257,20 +252,18 @@ async function loadComments(){
       div.className='comment';
       div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
 
-      if(data.creator === userId || userId === OWNER_ID){
+      if(data.creator === userId || OWNER_ID === userId){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
-        editBtn.onclick = async ()=>{
+        editBtn.onclick=async ()=>{
           const newText = prompt('Edit comment:', data.text);
           if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
         };
-
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
-        delBtn.onclick = async ()=>{
+        delBtn.onclick=async ()=>{
           if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
-
         div.appendChild(editBtn);
         div.appendChild(delBtn);
       }

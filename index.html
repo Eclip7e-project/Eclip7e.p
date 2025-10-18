@@ -242,6 +242,7 @@ body {
   <p id="design-msg" style="color:var(--gold);text-align:center;margin-top:10px;"></p>
 </section>
 
+   
 
 <section id="design-management" style="margin-top:28px;">
   <h2>Manage Your Designs</h2>
@@ -313,26 +314,14 @@ Thank you for helping us celebrate and support RII7E! 🧡
           <option value="rii7e">RII7E</option>
           <option value="brii7e">BRII7E</option>
         </select>
-        <!-- ✅ Regular notes -->
-<div id="note-section" style="display:block;">
-  <label>Text color</label>
-  <input id="color-picker" type="color" value="#000000">
-  <label style="margin-top:10px">Write your message (max 300 chars)</label>
-  <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
-</div>
-
-<!-- ✅ Letters only -->
-<div id="letter-section" style="display:none;">
-  <label>Text color</label>
-  <input id="letter-color-picker" type="color" value="#000000">
-  <label style="margin-top:10px">Write your letter (max 2000 chars)</label>
-  <textarea id="letter-text" maxlength="2000" placeholder="Write your letter (max 2000 chars)"></textarea>
-</div>
-
-<div class="modal-actions">
-  <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
-  <button class="btn btn-submit" id="modal-submit">Submit</button>
-</div>
+        <label>Text color</label>
+        <input id="color-picker" type="color" value="#000000">
+        <label style="margin-top:10px">Write your message (max 300 chars)</label>
+        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
+          <button class="btn btn-submit" id="modal-submit">Submit</button>
+        </div>
       </div>
     </div>
   </div>
@@ -422,24 +411,6 @@ function setupModal() {
     memberSelectLabel.style.display = 'none';
   }
 
-
-
- if(currentMember === 'letters'){
-  document.getElementById('note-section').style.display = 'none';
-  document.getElementById('letter-section').style.display = 'block';
-  previewText.style.color = letterColorPicker.value;
-  letterText.value = '';
-} else {
-  document.getElementById('note-section').style.display = 'block';
-  document.getElementById('letter-section').style.display = 'none';
-  previewText.style.color = colorPicker.value;
-  noteText.value = '';
-}
-
-
-
-
-
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -451,13 +422,6 @@ const closeModal = () => {
 
 noteText.addEventListener('input', e => previewText.textContent = e.target.value);
 colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-  
-  const letterText = document.getElementById('letter-text');
-const letterColorPicker = document.getElementById('letter-color-picker');
-
-letterText.addEventListener('input', e => previewText.textContent = e.target.value);
-letterColorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-
 modalClose.onclick = closeModal;
 modalCancel.onclick = closeModal;
 window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
@@ -602,14 +566,6 @@ function renderSimpleNotes(){
     note.style.height = '110px';
     note.style.border = '3px solid #ccc';
     note.innerHTML = `<img src="${imgFile}" alt="Simple note">`;
-
-    const openModalForLetters = (imgSrc) => {
-  currentMember = 'letters';
-  currentImg = imgSrc;
-  currentMode = 'letters';
-  setupModal();
-};
-
     note.onclick = () => openModalForSimple(imgFile);
     wall.appendChild(note);
   });
@@ -689,16 +645,11 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-document.addEventListener('DOMContentLoaded', () => {
-  const letterText = document.getElementById('letter-text');
-  const letterColorPicker = document.getElementById('letter-color-picker');
-
-  letterText.addEventListener('input', e => previewText.textContent = e.target.value);
-  letterColorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-
-
+modalSubmit.addEventListener('click', async ()=>{
+  const text = noteText.value.trim();
   if(!text){ alert('Write something!'); return; }
 
+  const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
   const member = currentMode==='simple'?memberSelect.value:currentMember;
 
@@ -734,9 +685,3 @@ renderLettersSection();
 
 </body>
 </html> 
-
-
-
-
-
-

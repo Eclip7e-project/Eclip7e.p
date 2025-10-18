@@ -69,7 +69,6 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   text-shadow:1px 1px 3px white;
 }
 
-
 /* Buttons under image */
 #modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
 #modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
@@ -90,69 +89,18 @@ footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
 
-
-
-  /* ----------------- MOBILE RESPONSIVENESS ----------------- */
+/* ----------------- MOBILE RESPONSIVENESS ----------------- */
 @media (max-width: 768px) {
-  #modal-content {
-    flex-direction: column;
-    width: 95%;
-    height: 90vh;
-    overflow-y: auto;
-    padding: 10px;
-  }
-
-  #modal-image-container {
-    width: 100%;
-    flex: none;
-    align-items: center;
-  }
-
-  #modal-img {
-    width: 100%;
-    height: auto;
-    max-height: 50vh;
-    object-fit: contain;
-  }
-
-  #modal-text {
-    position: absolute;
-    top: 18%;
-    left: 22%;
-    right: 20%;
-    font-size: 0.4rem;
-    color: black;
-    text-shadow: 1px 1px 2px white;
-  }
-
-  #modal-comments {
-    width: 100%;
-    max-height: none;
-    overflow-y: visible;
-    margin-top: 15px;
-    padding: 10px;
-  }
-
-  #modal-buttons {
-    margin-top: 10px;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  #modal-like, #modal-delete, #submit-comment {
-    font-size: 0.9rem;
-    padding: 6px 12px;
-  }
-
-  .comment .text {
-    font-size: 0.9rem;
-  }
-
-  #comment-input {
-    font-size: 0.9rem;
-  }
+  #modal-content { flex-direction: column; width: 95%; height: 90vh; overflow-y: auto; padding: 10px; }
+  #modal-image-container { width: 100%; flex: none; align-items: center; }
+  #modal-img { width: 100%; height: auto; max-height: 50vh; object-fit: contain; }
+  #modal-text { position: absolute; top: 18%; left: 22%; right: 20%; font-size: 0.4rem; color: black; text-shadow: 1px 1px 2px white; }
+  #modal-comments { width: 100%; max-height: none; overflow-y: visible; margin-top: 15px; padding: 10px; }
+  #modal-buttons { margin-top: 10px; justify-content: center; gap: 8px; }
+  #modal-like, #modal-delete, #submit-comment { font-size: 0.9rem; padding: 6px 12px; }
+  .comment .text { font-size: 0.9rem; }
+  #comment-input { font-size: 0.9rem; }
 }
-
 </style>
 </head>
 <body>
@@ -196,7 +144,7 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -265,12 +213,6 @@ async function openModal(note){
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'white';
-  modalText.style.overflow='auto';
-  modalText.style.whiteSpace='pre-wrap';
-  modalText.style.wordBreak='break-word';
-  modalText.style.textAlign='center';
-  modalText.style.maxHeight='80vh';
-  modalText.style.padding='10px';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
@@ -311,9 +253,6 @@ onSnapshot(notesCol, snapshot=>{
 });
 
 // ----------------- Comments -----------------
-
-import { serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
 async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
@@ -332,8 +271,10 @@ async function loadComments() {
         <span class="text">${data.text}</span>
       `;
 
-      // --- Edit/Delete Buttons for creator or owner ---
-      if (data.creator === userId || userId === "cris_owner_001") {
+      const isOwner = (userId === "cris_owner_001"); 
+      const isCreator = (data.creator === userId);
+
+      if (isOwner || isCreator) {
         const btnWrap = document.createElement('div');
         btnWrap.style.display = "flex";
         btnWrap.style.gap = "4px";
@@ -343,17 +284,18 @@ async function loadComments() {
         editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
-          if (newText && newText.trim() !== "") {
-            await updateDoc(
-              doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
-              { text: newText.trim(), edited: true }
-            );
-          }
+          if (!newText || newText.trim() === "") return;
+          if (!isOwner && !isCreator) { alert("No permission"); return; }
+          await updateDoc(
+            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
+            { text: newText.trim(), edited: true }
+          );
         };
 
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
+          if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
             await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
           }
@@ -388,11 +330,6 @@ submitComment.onclick = async () => {
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
-
 </script>
 </body>
 </html>
-
-
-
-

@@ -30,11 +30,11 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:10px;
-  left:10px;
-  right:10px;
+  top:2.3cm;
+  left:4.6cm;
+  right:4.3cm;
   color:black;
-  font-size:0.75rem;
+  font-size:0.7rem;
   white-space:pre-wrap;
   overflow-wrap:break-word;
 }
@@ -43,37 +43,23 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
-#modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; padding:20px; }
-#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
-
-/* Image container */
-#modal-image-container { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; }
-#modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
-#modal-text { 
-  position:absolute; 
-  top:2.3cm; left:4.6cm; right:4.3cm; 
-  color:black; font-size:0.7rem; 
-  white-space:pre-wrap; word-wrap:break-word; 
-  text-align:center; pointer-events:none; text-shadow:1px 1px 3px white;
-}
-
-/* Buttons under image */
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { display:flex; gap:20px; position:relative; max-width:90%; width:90%; max-height:90%; background:transparent; border-radius:15px; overflow:auto; }
+.modal-letter { position:relative; flex-shrink:0; width:400px; height:600px; }
+#modal-img { width:100%; height:100%; border-radius:15px; object-fit:cover; display:block; }
+#modal-text { position:absolute; top:2.3cm; left:4.6cm; right:4.3cm; color:black; font-size:0.7rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
 #modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
 #modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
-#modal-delete { background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
-/* Comments */
-#modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; }
-#modal-comments h3 { margin-top:0; color:gold; text-align:center; }
-.comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
-.comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
-.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; }
-.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.8rem; }
+/* COMMENTS */
+#comments { flex:1; display:flex; flex-direction:column; gap:10px; max-height:600px; overflow-y:auto; }
+.comment { background:rgba(255,255,255,0.1); padding:5px 10px; border-radius:8px; font-size:0.7rem; position:relative; word-wrap:break-word; }
+.comment .delete-comment { position:absolute; top:5px; right:5px; cursor:pointer; color:red; font-weight:bold; font-size:0.8rem; display:none; }
+.comment-author { font-weight:bold; margin-bottom:3px; }
 
-#comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
-#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
-
+/* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
@@ -95,8 +81,8 @@ footer a:hover { text-decoration:underline; }
 <!-- Modal -->
 <div id="modal">
   <div id="modal-content">
-    <button id="modal-close">X</button>
-    <div id="modal-image-container">
+    <div class="modal-letter">
+      <button id="modal-close">X</button>
       <img id="modal-img" src="">
       <div id="modal-text"></div>
       <div id="modal-buttons">
@@ -104,12 +90,7 @@ footer a:hover { text-decoration:underline; }
         <button id="modal-delete">Delete</button>
       </div>
     </div>
-    <div id="modal-comments">
-      <h3>Comments</h3>
-      <div id="comments-list"></div>
-      <textarea id="comment-input" rows="3" placeholder="Write a comment..."></textarea>
-      <button id="submit-comment">Send</button>
-    </div>
+    <div id="comments"></div>
   </div>
 </div>
 
@@ -134,32 +115,25 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// Username + ID
-let username = localStorage.getItem('username');
-if (!username) {
-  username = prompt("Choose a username for your letters/comments:") || "Anonymous";
-  localStorage.setItem('username', username);
-}
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
-
-// DOM elements
+const memberName = "letters";
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalText = document.getElementById('modal-text');
 const modalLike = document.getElementById('modal-like');
-const modalDelete = document.getElementById('modal-delete');
 const modalClose = document.getElementById('modal-close');
-const commentsList = document.getElementById('comments-list');
-const commentInput = document.getElementById('comment-input');
-const submitComment = document.getElementById('submit-comment');
+const modalDelete = document.getElementById('modal-delete');
+const commentsContainer = document.getElementById('comments');
 
 let currentModalNote = null;
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+let username = localStorage.getItem('username') || prompt("Enter your username:") || "Anonymous";
+localStorage.setItem('username', username);
 
-// ----------------- Modal -----------------
+// Open modal
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','letters','memberNotes',note.id);
+  const docRef = doc(db,'notes',memberName,'memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
@@ -173,111 +147,129 @@ async function openModal(note){
   loadComments();
 }
 
-modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
+// Close modal
+modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; commentsContainer.innerHTML=''; }
 modal.onclick = ()=> modal.style.display='none';
-document.getElementById('modal-content').onclick = e=> e.stopPropagation();
+document.querySelector('#modal-content').onclick = e=> e.stopPropagation();
 
-// ----------------- Likes -----------------
-modalLike.onclick = async () => {
+// Like
+modalLike.onclick = async ()=>{
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// ----------------- Delete note -----------------
-modalDelete.onclick = async () => {
+// Delete letter
+modalDelete.onclick = async ()=>{
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
+  await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id));
   modal.style.display='none';
+  commentsContainer.innerHTML='';
 };
 
-// ----------------- Render letters -----------------
+// Render letters
 function renderNotes(notes){
   wall.innerHTML='';
+  let maxLikes=-1, topNoteId=null;
+  const currentWeek=Math.floor((new Date()-new Date('2025-09-04'))/(7*24*60*60*1000))+1;
+  notes = notes.filter(n=>n.creator);
+
+  notes.forEach(n=>{
+    if(n.week===currentWeek && (n.likes||0)>maxLikes){
+      maxLikes=n.likes||0;
+      topNoteId=n.id;
+    }
+  });
+
   notes.forEach(n=>{
     const div=document.createElement('div');
     div.className='sticky-note';
+    if(n.id===topNoteId) div.classList.add('top-note');
 
     const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    imgEl.src=n.img;
 
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent=n.text;
     textDiv.style.color=n.color || 'black';
+    textDiv.style.top='2.3cm';
+    textDiv.style.left='4.6cm';
+    textDiv.style.right='4.3cm';
+    textDiv.style.fontSize='0.7rem';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
+
     div.onclick = ()=>openModal(n);
 
     wall.appendChild(div);
   });
 }
 
-// ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-  renderNotes(notes);
-});
-
-// ----------------- Comments -----------------
+// Comments
 async function loadComments(){
-  commentsList.innerHTML='';
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp','asc'));
+  commentsContainer.innerHTML='';
+  const q = query(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'), orderBy('timestamp','asc'));
   onSnapshot(q, snapshot=>{
-    commentsList.innerHTML='';
+    commentsContainer.innerHTML='';
     snapshot.docs.forEach(docSnap=>{
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
-      div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
+      const authorDiv = document.createElement('div');
+      authorDiv.className='comment-author';
+      authorDiv.textContent = data.username;
+      const textDiv = document.createElement('div');
+      textDiv.textContent = data.text;
+      div.appendChild(authorDiv);
+      div.appendChild(textDiv);
 
       if(data.creator === userId){
-        const editBtn = document.createElement('button');
-        editBtn.textContent='Edit';
-        editBtn.onclick=async ()=>{
-          const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
-        };
-        const delBtn = document.createElement('button');
-        delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{
-          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
-        };
-        div.appendChild(editBtn);
-        div.appendChild(delBtn);
+        const deleteBtn = document.createElement('span');
+        deleteBtn.textContent='X';
+        deleteBtn.className='delete-comment';
+        deleteBtn.style.display='block';
+        deleteBtn.onclick = async ()=>{ await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments',docSnap.id)); };
+        div.appendChild(deleteBtn);
       }
 
-      commentsList.appendChild(div);
+      commentsContainer.appendChild(div);
     });
   });
 }
 
-submitComment.onclick = async ()=>{
-  const text = commentInput.value.trim();
-  if(!text) return;
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  await addDoc(commentsCol,{
-    text,
-    username,
+// Add comment prompt (optional)
+function addComment(text){
+  if(!currentModalNote) return;
+  addDoc(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'),{
+    text:text,
     creator:userId,
-    timestamp: new Date()
+    username:username,
+    timestamp:new Date()
   });
-  commentInput.value='';
-};
+}
+
+// Firestore realtime letters
+const notesCol = collection(db,'notes',memberName,'memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  renderNotes(notes);
+});
+
+// Example: Add comment on pressing Enter (you can create input in modal)
+document.addEventListener('keypress', e=>{
+  if(e.key==='Enter' && modal.style.display==='flex'){
+    const commentText = prompt("Enter comment:");
+    if(commentText) addComment(commentText);
+  }
+});
 </script>
 </body>
 </html>
-
-
-
-
-

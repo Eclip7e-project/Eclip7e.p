@@ -52,8 +52,8 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 #modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
 #modal-text { 
   position:absolute; 
-  top:2cm; left:2cm; right:2cm; 
-  color:black; font-size:1rem; 
+  top:4cm; left:4cm; right:4cm; 
+  color:black; font-size:0.7rem; 
   white-space:pre-wrap; word-wrap:break-word; 
   text-align:center; pointer-events:none; text-shadow:1px 1px 3px white;
 }
@@ -255,21 +255,21 @@ async function loadComments(){
         div.appendChild(editBtn);
         div.appendChild(delBtn);
       }
+
       commentsList.appendChild(div);
     });
   });
 }
 
-// Submit comment
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text) return;
-  if(text.length>5000){ alert("Comment too long"); return; } // safety limit
-  await addDoc(collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments'),{
-    text:text,
+  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
+  await addDoc(commentsCol,{
+    text,
+    username,
     creator:userId,
-    username:username,
-    timestamp:Date.now()
+    timestamp: new Date()
   });
   commentInput.value='';
 };

@@ -424,7 +424,7 @@ function setupModal() {
 
 
 
-  if(currentMember === 'letters'){
+ if(currentMember === 'letters'){
   document.getElementById('note-section').style.display = 'none';
   document.getElementById('letter-section').style.display = 'block';
   previewText.style.color = letterColorPicker.value;
@@ -435,6 +435,7 @@ function setupModal() {
   previewText.style.color = colorPicker.value;
   noteText.value = '';
 }
+
 
 
 
@@ -688,16 +689,13 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-modalSubmit.addEventListener('click', async ()=>{
-  // Get text & color first
-  let text, color;
-  if(currentMember === 'letters'){
-    text = document.getElementById('letter-text').value.trim();
-    color = document.getElementById('letter-color-picker').value;
-  } else {
-    text = noteText.value.trim();
-    color = colorPicker.value;
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  const letterText = document.getElementById('letter-text');
+  const letterColorPicker = document.getElementById('letter-color-picker');
+
+  letterText.addEventListener('input', e => previewText.textContent = e.target.value);
+  letterColorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
+
 
   if(!text){ alert('Write something!'); return; }
 
@@ -736,6 +734,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

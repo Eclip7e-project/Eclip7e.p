@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RII7E & BRII7E Letters</title>
+<title>Letters Wall - RII7E Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
@@ -23,11 +23,10 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 .header-text { text-align:center; padding:20px; }
 .header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
 .header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
-.header-text a { color:gold; text-decoration:underline; margin-top:10px; display:inline-block; }
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
@@ -44,107 +43,20 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { 
-  display:none; 
-  position:fixed; 
-  top:0; left:0; 
-  width:100%; height:100%; 
-  background:rgba(0,0,0,0.8); 
-  justify-content:center; 
-  align-items:center; 
-  z-index:1000; 
-  overflow:auto; 
-  padding:20px; 
-}
-
-#modal-content { 
-  position:relative; 
-  background:transparent; 
-  border-radius:15px; 
-  max-width:400px; 
-  width:90%; 
-  aspect-ratio:2/3; 
-}
-
-#modal-img { 
-  width:100%; 
-  height:100%; 
-  border-radius:15px; 
-  object-fit:cover; 
-  display:block; 
-}
-
-#modal-text { 
-  position:absolute; 
-  top:10px; 
-  left:10px; 
-  right:10px; 
-  color:black; 
-  font-size:1rem; 
-  white-space:pre-wrap; 
-  overflow-wrap:break-word; 
-  pointer-events:none; 
-  text-shadow:1px 1px 2px white;
-}
-
-#modal-buttons { 
-  margin-top:10px; 
-  display:flex; 
-  justify-content:center; 
-  gap:10px; 
-}
-
-#modal-like { 
-  padding:5px 10px; 
-  cursor:pointer; 
-  background:gold; 
-  border:none; 
-  border-radius:5px; 
-  color:black; 
-  font-weight:bold; 
-}
-
-#modal-delete { 
-  display:none; 
-  background:red; 
-  color:white; 
-  border:none; 
-  border-radius:5px; 
-  padding:5px 10px; 
-  cursor:pointer; 
-}
-
-#modal-close { 
-  position:absolute; 
-  top:10px; 
-  right:10px; 
-  cursor:pointer; 
-  font-size:1.2rem; 
-  font-weight:bold; 
-  background:red; 
-  color:white; 
-  border:none; 
-  border-radius:5px; 
-  padding:3px 7px; 
-  z-index:1001; 
-}
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; overflow:auto; }
+#modal-content { position:relative; background:transparent; border-radius:15px; max-width:400px; width:90%; max-height:90%; display:flex; flex-direction:column; align-items:center; }
+#modal-img { width:100%; border-radius:15px; display:block; object-fit:contain; }
+#modal-text { position:absolute; top:20px; left:20px; right:20px; color:black; font-size:1rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
+#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; width:100%; }
+#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
 /* Comments */
-#comment-section { 
-  margin-top:10px; 
-  max-height:150px; 
-  overflow-y:auto; 
-  background:rgba(255,255,255,0.1); 
-  border-radius:10px; 
-  padding:5px; 
-  color:white; 
-  font-size:0.9rem;
-}
-#comment-input { width:70%; padding:5px; border-radius:5px; border:none; }
-#comment-submit { padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; cursor:pointer; font-weight:bold; }
-.comment { margin:3px 0; text-align:left; }
+#modal-comments { width:100%; margin-top:10px; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; max-height:200px; overflow-y:auto; color:white; font-size:0.9rem; text-align:left; }
+#modal-comments input { width:calc(100% - 60px); padding:5px; border-radius:5px; border:none; margin-right:5px; }
+#modal-comments button { padding:5px 10px; border:none; border-radius:5px; background:gold; cursor:pointer; font-weight:bold; }
 
-/* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
@@ -153,11 +65,11 @@ footer a:hover { text-decoration:underline; }
 <body>
 
 <header>
-  <img src="rii7ebanner.jpg" alt="RII7E & BRII7E Banner" class="banner">
+  <img src="lettersbanner.jpg" alt="Letters Banner" class="banner">
   <div class="header-text">
     <h1>Letters Wall</h1>
-    <p>All submitted letters for RII7E & BRII7E. Click ❤ to like, comment, and view!</p>
-    <a href="index.html">← Back to Homepage</a>
+    <p>All submitted letters. Give love by clicking ❤!</p>
+    <a href="index.html" style="color:gold; text-decoration:underline; margin-top:10px; display:inline-block;">← Back to Homepage</a>
   </div>
 </header>
 
@@ -167,7 +79,7 @@ footer a:hover { text-decoration:underline; }
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
-    <div style="position:relative; width:100%; height:100%;">
+    <div style="position:relative; width:100%;">
       <img id="modal-img" src="">
       <div id="modal-text"></div>
     </div>
@@ -175,20 +87,24 @@ footer a:hover { text-decoration:underline; }
       <button id="modal-like">❤ 0</button>
       <button id="modal-delete">Delete</button>
     </div>
-    <div id="comment-section"></div>
-    <input type="text" id="comment-input" placeholder="Add comment...">
-    <button id="comment-submit">Send</button>
+    <div id="modal-comments">
+      <div id="comments-list"></div>
+      <div style="display:flex; margin-top:5px;">
+        <input type="text" id="comment-input" placeholder="Add comment...">
+        <button id="comment-submit">Send</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <footer>
-  <p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
-  <img src="logo.jpg" alt="Logo" height="80">
+<p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
+<img src="logo.jpg" alt="Logo" height="80">
 </footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // Firebase
 const firebaseConfig = {
@@ -210,7 +126,7 @@ const modalText = document.getElementById('modal-text');
 const modalLike = document.getElementById('modal-like');
 const modalClose = document.getElementById('modal-close');
 const modalDelete = document.getElementById('modal-delete');
-const commentSection = document.getElementById('comment-section');
+const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const commentSubmit = document.getElementById('comment-submit');
 
@@ -220,67 +136,52 @@ let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', c
 // Open modal
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes',note.member,'memberNotes',note.id);
+  const docRef = doc(db,'allLetters',note.id);
   const docSnap = await getDoc(docRef);
-  if(docSnap.exists()) currentModalNote = {id: docSnap.id, member: note.member, ...docSnap.data()};
+  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
-  modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
-
   loadComments();
 }
 
 // Close modal
-modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; commentSection.innerHTML=''; }
+modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// Like button
+// Like
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes',currentModalNote.member,'memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'allLetters',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// Delete button
+// Delete
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes',currentModalNote.member,'memberNotes',currentModalNote.id));
+  if(!confirm("Delete your letter?")) return;
+  await deleteDoc(doc(db,'allLetters',currentModalNote.id));
   modal.style.display='none';
 };
 
 // Render notes
 function renderNotes(notes){
   wall.innerHTML='';
-  let maxLikes=-1, topNoteId=null;
-  const currentWeek=Math.floor((new Date()-new Date('2025-09-04'))/(7*24*60*60*1000))+1;
-
-  notes = notes.filter(n=>n.creator);
-
-  notes.forEach(n=>{
-    if(n.week===currentWeek && (n.likes||0)>maxLikes){
-      maxLikes=n.likes||0;
-      topNoteId=n.id;
-    }
-  });
-
   notes.forEach(n=>{
     const div=document.createElement('div');
     div.className='sticky-note';
-    if(n.id===topNoteId) div.classList.add('top-note');
 
     const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    imgEl.src=n.img; imgEl.alt='Letter';
 
     const textDiv=document.createElement('div');
     textDiv.className='text';
@@ -292,45 +193,69 @@ function renderNotes(notes){
 
     div.onclick = ()=>openModal(n);
 
+    // Right-click download
+    div.addEventListener('contextmenu', async e=>{
+      e.preventDefault();
+      const canvas = await html2canvas(div, { backgroundColor:null, useCORS:true });
+      const radius = 15;
+      const clippedCanvas = document.createElement('canvas');
+      clippedCanvas.width = canvas.width;
+      clippedCanvas.height = canvas.height;
+      const ctx = clippedCanvas.getContext('2d');
+      ctx.clearRect(0,0,clippedCanvas.width,clippedCanvas.height);
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(clippedCanvas.width-radius, 0);
+      ctx.quadraticCurveTo(clippedCanvas.width, 0, clippedCanvas.width, radius);
+      ctx.lineTo(clippedCanvas.width, clippedCanvas.height-radius);
+      ctx.quadraticCurveTo(clippedCanvas.width, clippedCanvas.height, clippedCanvas.width-radius, clippedCanvas.height);
+      ctx.lineTo(radius, clippedCanvas.height);
+      ctx.quadraticCurveTo(0, clippedCanvas.height, 0, clippedCanvas.height-radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0,0,radius,0);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(canvas,0,0);
+      const link=document.createElement('a');
+      link.download='letter.png';
+      link.href=clippedCanvas.toDataURL('image/png');
+      link.click();
+    });
+
     wall.appendChild(div);
   });
 }
 
-// Firestore realtime - all notes collection
-const notesCol = collection(db,'allNotes'); // unified collection for RII7E & BRII7E letters
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, ...d.data()}));
-  renderNotes(notes);
-});
-
-// COMMENTS
+// Comments
 async function loadComments(){
-  commentSection.innerHTML='';
+  commentsList.innerHTML = '';
   if(!currentModalNote) return;
-  const commentsCol = collection(db,'allNotes',currentModalNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp','asc'));
-  onSnapshot(q, snapshot=>{
-    commentSection.innerHTML='';
-    snapshot.docs.forEach(doc=>{
-      const c = doc.data();
-      const div = document.createElement('div');
-      div.className='comment';
-      div.textContent = c.user + ': ' + c.text;
-      commentSection.appendChild(div);
+  const commentsCol = collection(db,'allLetters',currentModalNote.id,'comments');
+  const q = query(commentsCol, orderBy('timestamp'));
+  onSnapshot(q,snapshot=>{
+    commentsList.innerHTML='';
+    snapshot.docs.forEach(d=>{
+      const data=d.data();
+      const div=document.createElement('div');
+      div.textContent=`${data.user}: ${data.text}`;
+      commentsList.appendChild(div);
     });
   });
 }
 
-// Add comment
-commentSubmit.onclick = async ()=>{
+commentSubmit.onclick = async () => {
   if(!commentInput.value.trim() || !currentModalNote) return;
-  await addDoc(collection(db,'allNotes',currentModalNote.id,'comments'),{
-    user: userId,
-    text: commentInput.value,
-    timestamp: new Date()
-  });
+  const commentsCol = collection(db,'allLetters',currentModalNote.id,'comments');
+  await addDoc(commentsCol,{ user:userId, text:commentInput.value.trim(), timestamp:new Date() });
   commentInput.value='';
 };
+
+// Firestore realtime
+const notesCol = collection(db,'allLetters');
+onSnapshot(notesCol, snapshot=>{
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  renderNotes(notes);
+});
 </script>
 </body>
 </html>

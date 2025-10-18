@@ -126,7 +126,7 @@ import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, addDoc
 
 // 🔑 Owner ID
 const OWNER_ID = "cris_owner_001";
-
+  
 // Firebase
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
@@ -172,7 +172,7 @@ async function openModal(note){
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-  modalDelete.style.display = (currentModalNote.creator === userId || userId === OWNER_ID) ? 'inline-block' : 'none';
+  modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display='flex';
 
   loadComments();
@@ -197,7 +197,7 @@ modalLike.onclick = async ()=>{
 // ----------------- Delete Note -----------------
 modalDelete.onclick = async ()=>{
   if(!currentModalNote) return;
-  if(!confirm("Delete this note?")) return;
+  if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'letters',currentModalNote.id));
   modal.style.display='none';
 };
@@ -242,7 +242,31 @@ async function loadComments(){
       div.className='comment';
       div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
 
-      // Edit & delete buttons only for creator or owner
+      // Edit & delete buttons only for creator
+      if(data.creator === userId){
+        const editBtn = document.createElement('button');
+        editBtn.textContent='Edit';
+        editBtn.onclick = async ()=>{
+          const newText = prompt('Edit comment:', data.text);
+          if(newText) await updateDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id), { text: newText });
+        };
+        const delBtn = document.createElement('button');
+        delBtn.textContent='Delete';
+        delBtn.onclick = async ()=>{
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id));
+        };
+        div.appendChild(editBtn);
+        div.appendChild(delBtn);
+      }
+
+      commentsList.appendChild(div);
+    });
+  });
+}
+
+
+
+ // Edit & delete buttons only for creator or owner
       if(data.creator === userId || userId === OWNER_ID){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
@@ -263,7 +287,7 @@ async function loadComments(){
     });
   });
 }
-
+  
 // ----------------- Submit Comment -----------------
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();

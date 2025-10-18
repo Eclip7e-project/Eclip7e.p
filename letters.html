@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Letters Wall - RII7E Project</title>
+<title>Anton Letters - RII7E Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
@@ -23,6 +23,7 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 .header-text { text-align:center; padding:20px; }
 .header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
 .header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
+.header-text a { color:gold; text-decoration:underline; margin-top:10px; display:inline-block; }
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
@@ -34,7 +35,7 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   left:10px;
   right:10px;
   color:black;
-  font-size:0.8rem;
+  font-size:0.75rem;
   white-space:pre-wrap;
   overflow-wrap:break-word;
 }
@@ -43,21 +44,105 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; overflow:auto; padding:20px; }
-#modal-content { position:relative; background:transparent; border-radius:15px; max-width:600px; width:100%; }
-#modal-img { width:100%; border-radius:15px; display:block; margin-bottom:10px; }
-#modal-text { color:white; font-size:1rem; white-space:pre-wrap; margin-bottom:10px; }
-#modal-buttons { margin-bottom:10px; display:flex; justify-content:center; gap:10px; }
-#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
-#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
-#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+#modal { 
+  display:none; 
+  position:fixed; 
+  top:0; left:0; 
+  width:100%; height:100%; 
+  background:rgba(0,0,0,0.8); 
+  justify-content:center; 
+  align-items:center; 
+  z-index:1000; 
+  overflow:auto; 
+  padding:20px; 
+}
+
+#modal-content { 
+  position:relative; 
+  background:transparent; 
+  border-radius:15px; 
+  max-width:400px; 
+  width:90%; 
+  aspect-ratio:2/3; 
+}
+
+#modal-img { 
+  width:100%; 
+  height:100%; 
+  border-radius:15px; 
+  object-fit:cover; 
+  display:block; 
+}
+
+#modal-text { 
+  position:absolute; 
+  top:10px; 
+  left:10px; 
+  right:10px; 
+  color:black; 
+  font-size:1rem; 
+  white-space:pre-wrap; 
+  overflow-wrap:break-word; 
+  pointer-events:none; 
+  text-shadow:1px 1px 2px white;
+}
+
+#modal-buttons { 
+  margin-top:10px; 
+  display:flex; 
+  justify-content:center; 
+  gap:10px; 
+}
+
+#modal-like { 
+  padding:5px 10px; 
+  cursor:pointer; 
+  background:gold; 
+  border:none; 
+  border-radius:5px; 
+  color:black; 
+  font-weight:bold; 
+}
+
+#modal-delete { 
+  display:none; 
+  background:red; 
+  color:white; 
+  border:none; 
+  border-radius:5px; 
+  padding:5px 10px; 
+  cursor:pointer; 
+}
+
+#modal-close { 
+  position:absolute; 
+  top:10px; 
+  right:10px; 
+  cursor:pointer; 
+  font-size:1.2rem; 
+  font-weight:bold; 
+  background:red; 
+  color:white; 
+  border:none; 
+  border-radius:5px; 
+  padding:3px 7px; 
+  z-index:1001; 
+}
 
 /* Comments */
-#modal-comments { background:#fff; color:#000; border-radius:8px; padding:10px; max-height:250px; overflow-y:auto; margin-top:10px; text-align:left; }
-#modal-comments h4 { margin:0 0 5px 0; }
-#comments-list div { border-bottom:1px solid #ccc; padding:4px 0; }
-#comment-input { width:100%; margin-top:6px; padding:6px; }
-#comment-submit { margin-top:6px; background:gold; color:black; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#comment-section { 
+  margin-top:10px; 
+  max-height:150px; 
+  overflow-y:auto; 
+  background:rgba(255,255,255,0.1); 
+  border-radius:10px; 
+  padding:5px; 
+  color:white; 
+  font-size:0.9rem;
+}
+#comment-input { width:70%; padding:5px; border-radius:5px; border:none; }
+#comment-submit { padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; cursor:pointer; font-weight:bold; }
+.comment { margin:3px 0; text-align:left; }
 
 /* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
@@ -68,38 +153,37 @@ footer a:hover { text-decoration:underline; }
 <body>
 
 <header>
-  <img src="lettersbanner.jpg" alt="Letters Banner" class="banner">
+  <img src="antonbanner.jpg" alt="Anton Banner" class="banner">
   <div class="header-text">
-    <h1>Letters Wall</h1>
-    <p>All submitted letters for members. Show love by clicking ❤!</p>
-    <a href="index.html" style="color:gold; text-decoration:underline; margin-top:10px; display:inline-block;">← Back to Homepage</a>
+    <h1>Anton Letters</h1>
+    <p>All submitted letters for Anton. Show love by clicking ❤ and commenting!</p>
+    <a href="index.html">← Back to Homepage</a>
   </div>
 </header>
 
-<section class="wall" id="letters-wall"></section>
+<section class="wall" id="anton-wall"></section>
 
 <!-- Modal -->
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
-    <img id="modal-img" src="">
-    <div id="modal-text"></div>
+    <div style="position:relative; width:100%; height:100%;">
+      <img id="modal-img" src="">
+      <div id="modal-text"></div>
+    </div>
     <div id="modal-buttons">
       <button id="modal-like">❤ 0</button>
       <button id="modal-delete">Delete</button>
     </div>
-    <div id="modal-comments">
-      <h4>Comments</h4>
-      <div id="comments-list"></div>
-      <textarea id="comment-input" placeholder="Write a comment..."></textarea>
-      <button id="comment-submit">Submit</button>
-    </div>
+    <div id="comment-section"></div>
+    <input type="text" id="comment-input" placeholder="Add comment...">
+    <button id="comment-submit">Send</button>
   </div>
 </div>
 
 <footer>
-<p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
-<img src="logo.jpg" alt="Logo" height="80">
+  <p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
+  <img src="logo.jpg" alt="Logo" height="80">
 </footer>
 
 <script type="module">
@@ -119,54 +203,40 @@ initializeApp(firebaseConfig);
 const db = getFirestore();
 
 // Variables
-const memberName = "letters";
-const wall = document.getElementById('letters-wall');
+const memberName = "anton";
+const wall = document.getElementById('anton-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalText = document.getElementById('modal-text');
 const modalLike = document.getElementById('modal-like');
 const modalClose = document.getElementById('modal-close');
 const modalDelete = document.getElementById('modal-delete');
-
-const commentsList = document.getElementById('comments-list');
+const commentSection = document.getElementById('comment-section');
 const commentInput = document.getElementById('comment-input');
 const commentSubmit = document.getElementById('comment-submit');
 
 let currentModalNote = null;
-let currentNoteId = null;
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
 // Open modal
 async function openModal(note){
   currentModalNote = note;
-  currentNoteId = note.id;
-
   const docRef = doc(db,'notes',memberName,'memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
+  modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
 
-  // Load comments realtime
-  const commentsCol = collection(db, 'comments', memberName, currentNoteId, 'commentList');
-  const commentsQuery = query(commentsCol, orderBy('timestamp'));
-  onSnapshot(commentsQuery, snapshot => {
-    commentsList.innerHTML = '';
-    snapshot.docs.forEach(docSnap => {
-      const c = docSnap.data();
-      const div = document.createElement('div');
-      div.textContent = `${c.creatorId === userId ? 'You' : 'Anonymous'}: ${c.text}`;
-      commentsList.appendChild(div);
-    });
-  });
+  loadComments();
 }
 
 // Close modal
-modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
+modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; commentSection.innerHTML=''; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
@@ -190,23 +260,16 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// Submit comment
-commentSubmit.onclick = async () => {
-  const text = commentInput.value.trim();
-  if(!text) return;
-  await addDoc(collection(db,'comments',memberName,currentNoteId,'commentList'), { text, creatorId:userId, timestamp:Date.now() });
-  commentInput.value='';
-};
-
 // Render notes
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
+  const currentWeek=Math.floor((new Date()-new Date('2025-09-04'))/(7*24*60*60*1000))+1;
 
   notes = notes.filter(n=>n.creator);
 
   notes.forEach(n=>{
-    if((n.likes||0)>maxLikes){
+    if(n.week===currentWeek && (n.likes||0)>maxLikes){
       maxLikes=n.likes||0;
       topNoteId=n.id;
     }
@@ -234,12 +297,40 @@ function renderNotes(notes){
   });
 }
 
-// Firestore realtime
+// Firestore realtime for notes
 const notesCol = collection(db,'notes',memberName,'memberNotes');
 onSnapshot(notesCol, snapshot=>{
   const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
 });
+
+// COMMENTS
+async function loadComments(){
+  commentSection.innerHTML='';
+  const commentsCol = collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments');
+  const q = query(commentsCol, orderBy('timestamp','asc'));
+  onSnapshot(q, snapshot=>{
+    commentSection.innerHTML='';
+    snapshot.docs.forEach(doc=>{
+      const c = doc.data();
+      const div = document.createElement('div');
+      div.className='comment';
+      div.textContent = c.user + ': ' + c.text;
+      commentSection.appendChild(div);
+    });
+  });
+}
+
+// Add comment
+commentSubmit.onclick = async ()=>{
+  if(!commentInput.value.trim() || !currentModalNote) return;
+  await addDoc(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'),{
+    user: userId,
+    text: commentInput.value,
+    timestamp: new Date()
+  });
+  commentInput.value='';
+};
 </script>
 </body>
 </html>

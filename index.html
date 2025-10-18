@@ -236,13 +236,6 @@ body {
       <option value="rii7e">RII7E</option>
       <option value="brii7e">BRII7E</option>
       <option value="letters">LETTERS</option> <!-- ✅ ADDED HERE -->
-      <!-- ✅ For letters only -->
-<div id="letter-section" style="display:none;">
-  <label>Text color</label>
-  <input id="letter-color-picker" type="color" value="#000000">
-  <label style="margin-top:10px">Write your letter (max 2000 chars)</label>
-  <textarea id="letter-text" maxlength="2000" placeholder="Write your letter (max 2000 chars)"></textarea>
-</div>
     </select>
     <button id="submitDesign" class="btn btn-submit">Submit Design</button>
   </div>
@@ -322,6 +315,11 @@ Thank you for helping us celebrate and support RII7E! 🧡
         </select>
         <label>Text color</label>
         <input id="color-picker" type="color" value="#000000">
+        <!-- ✅ For letters only -->
+  <label>Text color</label>
+  <input id="letter-color-picker" type="color" value="#000000">
+  <label style="margin-top:10px">Write your letter (max 2000 chars)</label>
+  <textarea id="letter-text" maxlength="2000" placeholder="Write your letter (max 2000 chars)"></textarea>
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
         <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
         <div class="modal-actions">
@@ -691,4 +689,5 @@ renderLettersSection();
 
 </body>
 </html> 
+
 

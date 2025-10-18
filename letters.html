@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Letters Wall - RII7E Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 body {
   font-family: 'Playfair Display', serif;
@@ -29,12 +30,15 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:2.3cm; left:4.6cm; right:4.3cm;
+  top:2.3cm;
+  left:4.6cm;
+  right:4.3cm;
   color:black;
-  font-size:0.7rem;
+  font-size:0.6rem;
   white-space:pre-wrap;
-  overflow-wrap:break-word;
+  word-break:break-word;
   text-align:center;
+  pointer-events:none;
 }
 
 /* Highlight top note */
@@ -64,9 +68,9 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 /* Comments */
 #modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; }
 #modal-comments h3 { margin-top:0; color:gold; text-align:center; }
-.comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; font-size:0.8rem; }
+.comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
 .comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
-.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; }
+.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
 .comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
 
 #comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
@@ -119,6 +123,7 @@ footer a:hover { text-decoration:underline; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 // Firebase
 const firebaseConfig = {
@@ -131,14 +136,17 @@ const firebaseConfig = {
 };
 initializeApp(firebaseConfig);
 const db = getFirestore();
+const auth = getAuth();
+signInAnonymously(auth).catch(console.error);
 
-// Username + ID
+// Username
 let username = localStorage.getItem('username');
-if (!username) {
+if(!username){
   username = prompt("Choose a username for your letters/comments:") || "Anonymous";
   localStorage.setItem('username', username);
 }
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+let userId = crypto.randomUUID();
+localStorage.setItem('userId', userId);
 
 // DOM elements
 const wall = document.getElementById('letters-wall');
@@ -190,7 +198,7 @@ modalLike.onclick = async () => {
 // ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete your letter?")) return;
+  if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
@@ -209,6 +217,15 @@ function renderNotes(notes){
     textDiv.className='text';
     textDiv.textContent=n.text;
     textDiv.style.color=n.color || 'black';
+    textDiv.style.position = 'absolute';
+    textDiv.style.top = '2.3cm';
+    textDiv.style.left = '4.6cm';
+    textDiv.style.right = '4.3cm';
+    textDiv.style.whiteSpace = 'pre-wrap';
+    textDiv.style.wordBreak = 'break-word';
+    textDiv.style.textAlign = 'center';
+    textDiv.style.pointerEvents = 'none';
+    textDiv.style.fontSize = '0.7rem';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
@@ -236,36 +253,19 @@ async function loadComments(){
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
+      div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
 
-      // Comment text
-      const textSpan = document.createElement('span');
-      textSpan.className='text';
-      textSpan.textContent = data.text;
-
-      // Username
-      const userSpan = document.createElement('span');
-      userSpan.className='username';
-      userSpan.textContent = data.username + ':';
-
-      div.appendChild(userSpan);
-      div.appendChild(textSpan);
-
-      // Edit/Delete buttons
       if(data.creator === userId){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
         editBtn.onclick=async ()=>{
           const newText = prompt('Edit comment:', data.text);
-          if(newText !== null){
-            await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
-          }
+          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
         };
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
         delBtn.onclick=async ()=>{
-          if(confirm('Delete comment?')){
-            await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
-          }
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
         div.appendChild(editBtn);
         div.appendChild(delBtn);
@@ -276,7 +276,6 @@ async function loadComments(){
   });
 }
 
-// ----------------- Submit comment -----------------
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text) return;

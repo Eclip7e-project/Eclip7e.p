@@ -321,6 +321,16 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <div class="modal-actions">
           <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
           <button class="btn btn-submit" id="modal-submit">Submit</button>
+
+           
+           <label id="name-label">Your name</label>
+<input type="text" id="note-name" placeholder="Enter your name">
+
+<label>
+  <input type="checkbox" id="anonymous-toggle"> Post anonymously
+</label>
+
+           
         </div>
       </div>
     </div>
@@ -400,6 +410,15 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
+  // ---------------- Dynamic max length ----------------
+  if(currentMember === 'letters'){
+    noteText.maxLength = 2000; // letters allow more
+    noteText.placeholder = "Write your message (max 2000 chars)";
+  } else {
+    noteText.maxLength = 300; // default for other members
+    noteText.placeholder = "Write your message (max 300 chars)";
+  }
+
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -415,16 +434,26 @@ function setupModal() {
   document.body.style.overflow = 'hidden';
 }
 
-const closeModal = () => {
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-};
 
-noteText.addEventListener('input', e => previewText.textContent = e.target.value);
-colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-modalClose.onclick = closeModal;
-modalCancel.onclick = closeModal;
-window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+   const noteName = $('#note-name');
+const anonymousToggle = $('#anonymous-toggle');
+
+   anonymousToggle.addEventListener('change', () => {
+  noteName.style.display = anonymousToggle.checked ? 'none' : 'block';
+});
+
+
+if(currentMember === 'letters'){
+  noteName.style.display = 'block';
+  anonymousToggle.style.display = 'block';
+  noteName.value = ''; // reset name field
+  anonymousToggle.checked = false; // default: not anonymous
+} else {
+  noteName.style.display = 'none';
+  anonymousToggle.style.display = 'none';
+}
+
 
 // ----------------- Open Modal -----------------
 const openModalForMember = (memberName, imgSrc) => {
@@ -645,13 +674,19 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-modalSubmit.addEventListener('click', async ()=>{
+modalSubmit.addEventListener('click', async ()=> {
   const text = noteText.value.trim();
   if(!text){ alert('Write something!'); return; }
 
   const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
-  const member = currentMode==='simple'?memberSelect.value:currentMember;
+  const member = currentMode==='simple' ? memberSelect.value : currentMember;
+
+  // Check for letters name
+  let creatorName = userId; // default: userId
+  if(member === 'letters'){
+    creatorName = anonymousToggle.checked ? 'Anonymous' : (noteName.value.trim() || 'Anonymous');
+  }
 
   const noteData = {
     img: currentImg,
@@ -660,7 +695,8 @@ modalSubmit.addEventListener('click', async ()=>{
     likes: 0,
     week,
     timestamp: Date.now(),
-    creator: userId
+    creator: userId,
+    name: creatorName // store the name or "Anonymous"
   };
 
   try{
@@ -672,6 +708,7 @@ modalSubmit.addEventListener('click', async ()=>{
     alert('Error submitting note.');
   }
 });
+
 
 // ----------------- Initialize -----------------
 renderPickSection();
@@ -685,5 +722,6 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 

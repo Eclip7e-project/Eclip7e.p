@@ -424,11 +424,11 @@ function setupModal() {
 
 
 
-if(currentMember === 'letters'){
+  if(currentMember === 'letters'){
   document.getElementById('note-section').style.display = 'none';
   document.getElementById('letter-section').style.display = 'block';
-  previewText.style.color = document.getElementById('letter-color-picker').value;
-  document.getElementById('letter-text').value = '';
+  previewText.style.color = letterColorPicker.value;
+  letterText.value = '';
 } else {
   document.getElementById('note-section').style.display = 'block';
   document.getElementById('letter-section').style.display = 'none';
@@ -438,8 +438,6 @@ if(currentMember === 'letters'){
 
 
 
-
-  
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -452,6 +450,13 @@ const closeModal = () => {
 
 noteText.addEventListener('input', e => previewText.textContent = e.target.value);
 colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
+  
+  const letterText = document.getElementById('letter-text');
+const letterColorPicker = document.getElementById('letter-color-picker');
+
+letterText.addEventListener('input', e => previewText.textContent = e.target.value);
+letterColorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
+
 modalClose.onclick = closeModal;
 modalCancel.onclick = closeModal;
 window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
@@ -596,6 +601,14 @@ function renderSimpleNotes(){
     note.style.height = '110px';
     note.style.border = '3px solid #ccc';
     note.innerHTML = `<img src="${imgFile}" alt="Simple note">`;
+
+    const openModalForLetters = (imgSrc) => {
+  currentMember = 'letters';
+  currentImg = imgSrc;
+  currentMode = 'letters';
+  setupModal();
+};
+
     note.onclick = () => openModalForSimple(imgFile);
     wall.appendChild(note);
   });
@@ -676,10 +689,8 @@ function setupManageDesignsRealtime() {
 
 // ----------------- Submit Modal Note -----------------
 modalSubmit.addEventListener('click', async ()=>{
-  const text = noteText.value.trim();
   if(!text){ alert('Write something!'); return; }
 
-  const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
   const member = currentMode==='simple'?memberSelect.value:currentMember;
 
@@ -733,6 +744,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

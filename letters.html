@@ -26,7 +26,7 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
@@ -43,20 +43,17 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; overflow:auto; }
-#modal-content { position:relative; background:transparent; border-radius:15px; max-width:500px; width:90%; max-height:90%; display:flex; flex-direction:column; align-items:center; }
-#modal-img { width:100%; border-radius:15px; display:block; max-height:80vh; object-fit:contain; }
-#modal-text { position:absolute; top:20px; left:20px; right:20px; color:black; font-size:1rem; white-space:pre-wrap; text-shadow:1px 1px 3px white; pointer-events:none; }
-#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
-#modal-like, #modal-delete { padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { display:flex; flex-direction:row; gap:15px; max-width:900px; width:90%; max-height:90vh; overflow:auto; background:transparent; border-radius:15px; }
+#modal-img { width:100%; max-height:80vh; object-fit:contain; border-radius:15px; }
+#modal-text { position:absolute; top:10px; left:10px; right:10px; color:black; font-size:1rem; text-shadow:1px 1px 3px white; pointer-events:none; z-index:2; white-space:pre-wrap; }
+#modal-buttons button { padding:5px 10px; cursor:pointer; border:none; border-radius:5px; font-weight:bold; }
 #modal-like { background:gold; color:black; }
 #modal-delete { background:red; color:white; display:none; }
-#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+#modal-close { position:absolute; top:10px; right:10px; z-index:3; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; cursor:pointer; }
 
 /* COMMENTS */
-#modal-comments { width:90%; margin-top:15px; max-height:200px; overflow:auto; text-align:left; background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; color:white; font-size:0.9rem; }
-.comment { margin-bottom:8px; }
-.comment strong { color:gold; }
+#modal-comments { flex:0.4; display:flex; flex-direction:column; overflow:auto; padding:10px; background:rgba(255,255,255,0.1); border-radius:10px; color:white; font-size:0.9rem; }
 #comment-form { display:flex; gap:5px; margin-top:5px; }
 #comment-input { flex:1; padding:5px; border-radius:5px; border:none; }
 #comment-submit { padding:5px 10px; border-radius:5px; border:none; background:gold; color:black; cursor:pointer; font-weight:bold; }
@@ -83,20 +80,22 @@ footer a:hover { text-decoration:underline; }
 <!-- Modal -->
 <div id="modal">
   <div id="modal-content">
-    <button id="modal-close">X</button>
-    <div style="position:relative; width:100%;">
+    <div style="position:relative; flex:1; display:flex; justify-content:center; align-items:center;">
       <img id="modal-img" src="">
       <div id="modal-text"></div>
+      <button id="modal-close">X</button>
+      <div id="modal-buttons" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:10px;">
+        <button id="modal-like">❤ 0</button>
+        <button id="modal-delete">Delete</button>
+      </div>
     </div>
-    <div id="modal-buttons">
-      <button id="modal-like">❤ 0</button>
-      <button id="modal-delete">Delete</button>
+    <div style="flex:0.4; display:flex; flex-direction:column;">
+      <div id="modal-comments"></div>
+      <form id="comment-form">
+        <input type="text" id="comment-input" placeholder="Add a comment..." required>
+        <button type="submit" id="comment-submit">Send</button>
+      </form>
     </div>
-    <div id="modal-comments"></div>
-    <form id="comment-form">
-      <input type="text" id="comment-input" placeholder="Add a comment..." required>
-      <button type="submit" id="comment-submit">Send</button>
-    </form>
   </div>
 </div>
 
@@ -149,8 +148,6 @@ async function openModal(note){
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
-  
-  // Load comments
   loadComments(currentModalNote.id);
 }
 
@@ -174,7 +171,7 @@ modalLike.onclick = async () => {
 // Delete button
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete your letter?")) return;
+  if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
@@ -199,7 +196,7 @@ function renderNotes(notes){
     if(n.id===topNoteId) div.classList.add('top-note');
 
     const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Letter';
+    imgEl.src=n.img; imgEl.alt='Note';
 
     const textDiv=document.createElement('div');
     textDiv.className='text';
@@ -247,13 +244,6 @@ function renderNotes(notes){
   });
 }
 
-// Firestore realtime
-const notesCol = collection(db,'notes',memberName,'memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-  renderNotes(notes);
-});
-
 // Comments
 async function loadComments(noteId){
   const commentsCol = collection(db,'notes',memberName,'memberNotes',noteId,'comments');
@@ -269,6 +259,7 @@ async function loadComments(noteId){
       div.innerHTML = `<strong>${data.creatorShort}:</strong> ${data.text}`;
       modalComments.appendChild(div);
     });
+    modalComments.scrollTop = modalComments.scrollHeight; // scroll to bottom
   });
 }
 
@@ -277,12 +268,23 @@ commentForm.addEventListener('submit', async e=>{
   if(!currentModalNote) return;
   const text = commentInput.value.trim();
   if(!text) return;
-  await addDoc(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'),{
-    text,
-    creatorShort: userId.slice(0,5),
-    timestamp: new Date()
-  });
-  commentInput.value='';
+  try {
+    await addDoc(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'),{
+      text,
+      creatorShort: userId.slice(0,5),
+      timestamp: new Date()
+    });
+    commentInput.value='';
+  } catch(err){
+    console.error('Error adding comment:', err);
+  }
+});
+
+// Firestore realtime
+const notesCol = collection(db,'notes',memberName,'memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  renderNotes(notes);
 });
 </script>
 </body>

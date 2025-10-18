@@ -26,7 +26,7 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
@@ -34,7 +34,7 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   left:10px;
   right:10px;
   color:black;
-  font-size:0.75rem;
+  font-size:0.8rem;
   white-space:pre-wrap;
   overflow-wrap:break-word;
 }
@@ -43,14 +43,21 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
-#modal-content { position:relative; background:transparent; border-radius:15px; max-width:500px; width:90%; max-height:90%; overflow:auto; }
-#modal-img { width:100%; border-radius:15px; display:block; }
-#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:1rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
-#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; overflow:auto; padding:20px; }
+#modal-content { position:relative; background:transparent; border-radius:15px; max-width:600px; width:100%; }
+#modal-img { width:100%; border-radius:15px; display:block; margin-bottom:10px; }
+#modal-text { color:white; font-size:1rem; white-space:pre-wrap; margin-bottom:10px; }
+#modal-buttons { margin-bottom:10px; display:flex; justify-content:center; gap:10px; }
 #modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
 #modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
 #modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+
+/* Comments */
+#modal-comments { background:#fff; color:#000; border-radius:8px; padding:10px; max-height:250px; overflow-y:auto; margin-top:10px; text-align:left; }
+#modal-comments h4 { margin:0 0 5px 0; }
+#comments-list div { border-bottom:1px solid #ccc; padding:4px 0; }
+#comment-input { width:100%; margin-top:6px; padding:6px; }
+#comment-submit { margin-top:6px; background:gold; color:black; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
 
 /* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
@@ -64,7 +71,7 @@ footer a:hover { text-decoration:underline; }
   <img src="lettersbanner.jpg" alt="Letters Banner" class="banner">
   <div class="header-text">
     <h1>Letters Wall</h1>
-    <p>All submitted letters. Give love by clicking ❤!</p>
+    <p>All submitted letters for members. Show love by clicking ❤!</p>
     <a href="index.html" style="color:gold; text-decoration:underline; margin-top:10px; display:inline-block;">← Back to Homepage</a>
   </div>
 </header>
@@ -75,13 +82,17 @@ footer a:hover { text-decoration:underline; }
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
-    <div style="position:relative;">
-      <img id="modal-img" src="">
-      <div id="modal-text"></div>
-    </div>
+    <img id="modal-img" src="">
+    <div id="modal-text"></div>
     <div id="modal-buttons">
       <button id="modal-like">❤ 0</button>
       <button id="modal-delete">Delete</button>
+    </div>
+    <div id="modal-comments">
+      <h4>Comments</h4>
+      <div id="comments-list"></div>
+      <textarea id="comment-input" placeholder="Write a comment..."></textarea>
+      <button id="comment-submit">Submit</button>
     </div>
   </div>
 </div>
@@ -93,7 +104,7 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // Firebase
 const firebaseConfig = {
@@ -117,21 +128,41 @@ const modalLike = document.getElementById('modal-like');
 const modalClose = document.getElementById('modal-close');
 const modalDelete = document.getElementById('modal-delete');
 
+const commentsList = document.getElementById('comments-list');
+const commentInput = document.getElementById('comment-input');
+const commentSubmit = document.getElementById('comment-submit');
+
 let currentModalNote = null;
+let currentNoteId = null;
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
 // Open modal
 async function openModal(note){
   currentModalNote = note;
+  currentNoteId = note.id;
+
   const docRef = doc(db,'notes',memberName,'memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
-  
+
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
+
+  // Load comments realtime
+  const commentsCol = collection(db, 'comments', memberName, currentNoteId, 'commentList');
+  const commentsQuery = query(commentsCol, orderBy('timestamp'));
+  onSnapshot(commentsQuery, snapshot => {
+    commentsList.innerHTML = '';
+    snapshot.docs.forEach(docSnap => {
+      const c = docSnap.data();
+      const div = document.createElement('div');
+      div.textContent = `${c.creatorId === userId ? 'You' : 'Anonymous'}: ${c.text}`;
+      commentsList.appendChild(div);
+    });
+  });
 }
 
 // Close modal
@@ -159,15 +190,23 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
+// Submit comment
+commentSubmit.onclick = async () => {
+  const text = commentInput.value.trim();
+  if(!text) return;
+  await addDoc(collection(db,'comments',memberName,currentNoteId,'commentList'), { text, creatorId:userId, timestamp:Date.now() });
+  commentInput.value='';
+};
+
 // Render notes
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
-  const currentWeek=Math.floor((new Date()-new Date('2025-09-04'))/(7*24*60*60*1000))+1;
+
   notes = notes.filter(n=>n.creator);
 
   notes.forEach(n=>{
-    if(n.week===currentWeek && (n.likes||0)>maxLikes){
+    if((n.likes||0)>maxLikes){
       maxLikes=n.likes||0;
       topNoteId=n.id;
     }
@@ -190,38 +229,6 @@ function renderNotes(notes){
     div.appendChild(textDiv);
 
     div.onclick = ()=>openModal(n);
-
-    // Right-click download
-    div.addEventListener('contextmenu', async e=>{
-      e.preventDefault();
-      const canvas = await html2canvas(div, { backgroundColor:null, useCORS:true });
-      const radius = 15;
-      const clippedCanvas = document.createElement('canvas');
-      clippedCanvas.width = canvas.width;
-      clippedCanvas.height = canvas.height;
-      const ctx = clippedCanvas.getContext('2d');
-
-      ctx.clearRect(0,0,clippedCanvas.width,clippedCanvas.height);
-      ctx.beginPath();
-      ctx.moveTo(radius, 0);
-      ctx.lineTo(clippedCanvas.width-radius, 0);
-      ctx.quadraticCurveTo(clippedCanvas.width, 0, clippedCanvas.width, radius);
-      ctx.lineTo(clippedCanvas.width, clippedCanvas.height-radius);
-      ctx.quadraticCurveTo(clippedCanvas.width, clippedCanvas.height, clippedCanvas.width-radius, clippedCanvas.height);
-      ctx.lineTo(radius, clippedCanvas.height);
-      ctx.quadraticCurveTo(0, clippedCanvas.height, 0, clippedCanvas.height-radius);
-      ctx.lineTo(0, radius);
-      ctx.quadraticCurveTo(0,0,radius,0);
-      ctx.closePath();
-      ctx.clip();
-
-      ctx.drawImage(canvas,0,0);
-
-      const link=document.createElement('a');
-      link.download='letter.png';
-      link.href=clippedCanvas.toDataURL('image/png');
-      link.click();
-    });
 
     wall.appendChild(div);
   });

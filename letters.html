@@ -70,7 +70,7 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
 .comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
 .comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
-.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
+.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.8rem; }
 
 #comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
 #submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
@@ -228,9 +228,8 @@ onSnapshot(notesCol, snapshot=>{
 // ----------------- Comments -----------------
 async function loadComments(){
   commentsList.innerHTML='';
-  if(!currentNote) return;
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp'));
+  const commentsCol = collection(db,'letters',currentModalNote.id,'comments');
+  const q = query(commentsCol, orderBy('timestamp','asc'));
   onSnapshot(q, snapshot=>{
     commentsList.innerHTML='';
     snapshot.docs.forEach(docSnap=>{
@@ -239,17 +238,18 @@ async function loadComments(){
       div.className='comment';
       div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
 
-      if(data.creator===userId || userId===OWNER_UID){
+      // Edit & delete buttons only for creator
+      if(data.creator === userId){
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
-        editBtn.onclick=async ()=>{
+        editBtn.onclick = async ()=>{
           const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentNote.id,'comments',docSnap.id),{text:newText});
+          if(newText) await updateDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id), { text: newText });
         };
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{
-          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentNote.id,'comments',docSnap.id));
+        delBtn.onclick = async ()=>{
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'letters',currentModalNote.id,'comments',docSnap.id));
         };
         div.appendChild(editBtn);
         div.appendChild(delBtn);
@@ -260,18 +260,24 @@ async function loadComments(){
   });
 }
 
+// ----------------- Submit Comment -----------------
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text) return;
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentNote.id,'comments');
+  const commentsCol = collection(db,'letters',currentModalNote.id,'comments');
   await addDoc(commentsCol,{
-    text, username, creator:userId, timestamp: new Date()
+    text,
+    username,
+    creator:userId,
+    timestamp: serverTimestamp()
   });
   commentInput.value='';
 };
+
 </script>
 </body>
 </html>
+
 
 
 

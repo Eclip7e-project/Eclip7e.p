@@ -3,274 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Letters to RIIZE</title>
+<title>Letters Wall - RII7E Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 body {
   font-family: 'Playfair Display', serif;
-  background: #111;
-  color: white;
-  margin: 0;
-  padding: 0;
-}
-header {
-  text-align: center;
-  padding: 40px 20px;
-  border-bottom: 3px solid gold;
-  background: black;
-}
-header h1 {
-  color: gold;
-  letter-spacing: 2px;
-  font-size: 2.3em;
-}
-#letters-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 25px;
-  padding: 30px;
-}
-.letter {
-  position: relative;
-  background: #fff8dc;
-  color: black;
-  border-radius: 15px;
-  padding: 15px;
-  min-height: 320px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-  cursor: pointer;
-  transform: rotate(-1deg);
-  transition: transform 0.3s;
-}
-.letter:hover {
-  transform: rotate(0deg) scale(1.02);
-}
-.letter img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-.letter-text {
-  position: absolute;
-  top: 2.3cm;
-  left: 1.5cm;
-  right: 1.2cm;
-  color: black;
-  font-size: 0.7rem;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  text-align: center;
-  text-shadow: 1px 1px 3px white;
-  pointer-events: none;
+  background-color:black;
+  background-image:url('https://www.transparenttextures.com/patterns/stardust.png');
+  color:white;
+  margin:0;
+  padding:0;
+  text-align:center;
 }
 
-/* Delete button */
-.delete-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: red;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 7px;
-  cursor: pointer;
-  font-weight: bold;
-  z-index: 2;
+/* HEADER */
+header { display:flex; flex-direction:column; align-items:center; background:black; border-bottom:2px solid gold; }
+header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2px solid gold; }
+.header-text { text-align:center; padding:20px; }
+.header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
+.header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
+
+/* WALL */
+section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
+.sticky-note .text {
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  color:black;
+  font-size:0.75rem;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
 }
 
-/* Modal */
-#modal {
-  display: none;
-  position: fixed;
-  z-index: 999;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.85);
-  justify-content: center;
-  align-items: center;
-}
-.modal-content {
-  background: #222;
-  border-radius: 15px;
-  max-width: 700px;
-  width: 90%;
-  padding: 20px;
-  position: relative;
-  box-shadow: 0 0 30px gold;
-}
-.modal-content img {
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
-.modal-text {
-  font-size: 1rem;
-  margin-bottom: 15px;
-  white-space: pre-wrap;
-  text-align: center;
-}
-.close-modal {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  color: gold;
-  font-size: 1.5em;
-  cursor: pointer;
-}
-.comment-section {
-  background: #111;
-  border-radius: 10px;
-  padding: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-.comment {
-  background: #333;
-  border-radius: 5px;
-  padding: 8px;
-  margin-bottom: 5px;
-}
-.comment button {
-  margin-left: 10px;
-  background: crimson;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 3px 6px;
-  cursor: pointer;
-}
-#new-comment {
-  width: 100%;
-  border-radius: 8px;
-  padding: 8px;
-  border: none;
-  margin-bottom: 5px;
-}
-button {
-  background: gold;
-  border: none;
-  border-radius: 8px;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 8px 12px;
-}
-button:hover { background: #daa520; }
+/* Highlight top note */
+.top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
+
+/* MODAL */
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { position:relative; background:transparent; border-radius:15px; max-width:500px; width:90%; max-height:90%; overflow:auto; }
+#modal-img { width:100%; border-radius:15px; display:block; }
+#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:1rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
+#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
+#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+
+/* COMMENTS */
+.comment-section { margin-top:15px; background:#111; border-radius:10px; padding:10px; max-height:200px; overflow-y:auto; text-align:left; }
+.comment { background:#222; border-radius:5px; padding:5px 8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; color:white; }
+.comment button { background:crimson; color:white; border:none; border-radius:5px; padding:2px 6px; cursor:pointer; font-size:0.7rem; }
+#new-comment { width:90%; border:none; border-radius:8px; padding:5px; margin-top:5px; }
+#submit-comment { background:gold; color:black; border:none; border-radius:8px; padding:6px 10px; margin-top:5px; font-weight:bold; cursor:pointer; }
+
+/* FOOTER */
+footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
+footer a { color:gold; text-decoration:none; }
+footer a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Letters to RIIZE</h1>
+  <img src="lettersbanner.jpg" alt="Letters Banner" class="banner">
+  <div class="header-text">
+    <h1>Letters Wall</h1>
+    <p>All submitted letters. Give love by clicking ❤!</p>
+    <a href="index.html" style="color:gold; text-decoration:underline; margin-top:10px; display:inline-block;">← Back to Homepage</a>
+  </div>
 </header>
 
-<section id="letters-container"></section>
+<section class="wall" id="letters-wall"></section>
 
 <!-- Modal -->
 <div id="modal">
-  <div class="modal-content">
-    <span class="close-modal">&times;</span>
-    <img id="modal-img" src="">
-    <div class="modal-text" id="modal-text"></div>
-    <button id="delete-letter" style="display:none;">Delete Letter</button>
-    <h3>Comments</h3>
+  <div id="modal-content">
+    <button id="modal-close">X</button>
+    <div style="position:relative;">
+      <img id="modal-img" src="">
+      <div id="modal-text"></div>
+    </div>
+    <div id="modal-buttons">
+      <button id="modal-like">❤ 0</button>
+      <button id="modal-delete">Delete</button>
+    </div>
+
+    <!-- Comments -->
     <div class="comment-section" id="comments"></div>
     <textarea id="new-comment" placeholder="Write a comment..."></textarea>
-    <button id="submit-comment">Post Comment</button>
+    <button id="submit-comment">Post</button>
   </div>
 </div>
 
+<footer>
+<p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
+<img src="logo.jpg" alt="Logo" height="80">
+</footer>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-// 🔑 Firebase Config
+// Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
-  authDomain: "rii7e-sticky-notes-project.firebaseapp.com",
-  projectId: "rii7e-sticky-notes-project",
-  storageBucket: "rii7e-sticky-notes-project.firebasestorage.app",
-  messagingSenderId: "962319162792",
-  appId: "1:962319162792:web:8fad2b11c316766c8a119d"
+  apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
+  authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
+  projectId:"rii7e-sticky-notes-project",
+  storageBucket:"rii7e-sticky-notes-project.firebasestorage.app",
+  messagingSenderId:"962319162792",
+  appId:"1:962319162792:web:8fad2b11c316766c8a119d"
 };
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// 🔑 Owner ID
+// Owner
 const OWNER_ID = "cris_owner_001";
-const userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
-// 🔄 Load letters live
-const container = document.getElementById('letters-container');
-onSnapshot(collection(db, "letters"), snapshot => {
-  container.innerHTML = '';
-  snapshot.docs.forEach(docSnap => {
-    const data = docSnap.data();
-    const div = document.createElement('div');
-    div.className = 'letter';
-    div.innerHTML = `<img src="${data.img}"><div class="letter-text">${data.text}</div>`;
-    if (data.creator === userId || userId === OWNER_ID) {
-      const del = document.createElement('button');
-      del.className = 'delete-btn';
-      del.textContent = 'Delete';
-      del.onclick = async e => {
-        e.stopPropagation();
-        if (confirm('Delete this letter?')) await deleteDoc(doc(db, "letters", docSnap.id));
-      };
-      div.appendChild(del);
-    }
-    div.onclick = () => openModal(docSnap.id, data);
-    container.appendChild(div);
-  });
-});
-
-// 🪶 Modal logic
+// Elements
+const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalText = document.getElementById('modal-text');
-const closeModal = document.querySelector('.close-modal');
-const deleteLetter = document.getElementById('delete-letter');
+const modalLike = document.getElementById('modal-like');
+const modalClose = document.getElementById('modal-close');
+const modalDelete = document.getElementById('modal-delete');
 const commentsBox = document.getElementById('comments');
 const newComment = document.getElementById('new-comment');
 const submitComment = document.getElementById('submit-comment');
 
-let currentLetterId = null;
+let currentLetter = null;
 
-function openModal(id, data){
-  modal.style.display = 'flex';
-  modalImg.src = data.img;
-  modalText.textContent = data.text;
-  currentLetterId = id;
-  deleteLetter.style.display = (data.creator === userId || userId === OWNER_ID) ? 'inline-block' : 'none';
-  loadComments(id);
+// Render letters
+function renderLetters(letters){
+  wall.innerHTML='';
+  letters.forEach(l=>{
+    const div=document.createElement('div');
+    div.className='sticky-note';
+    div.innerHTML=`<img src="${l.img}"><div class="text">${l.text}</div>`;
+    div.onclick=()=>openModal(l);
+    wall.appendChild(div);
+  });
 }
-closeModal.onclick = () => modal.style.display = 'none';
-modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
 
-// 🗑 Delete letter
-deleteLetter.onclick = async ()=>{
-  if (confirm('Delete this letter?')) {
-    await deleteDoc(doc(db,"letters",currentLetterId));
-    modal.style.display='none';
-  }
+// Open modal
+async function openModal(letter){
+  currentLetter = letter;
+  const ref = doc(db,"letters",letter.id);
+  const snap = await getDoc(ref);
+  if(snap.exists()) currentLetter = {id:snap.id,...snap.data()};
+
+  modalImg.src = currentLetter.img;
+  modalText.textContent = currentLetter.text;
+  modalLike.textContent = `❤ ${currentLetter.likes||0}`;
+  modalDelete.style.display = (currentLetter.creator===userId || userId===OWNER_ID) ? 'inline-block':'none';
+  modal.style.display='flex';
+  loadComments(letter.id);
+}
+
+// Close modal
+modalClose.onclick=()=>modal.style.display='none';
+modal.onclick=()=>modal.style.display='none';
+document.getElementById('modal-content').onclick=e=>e.stopPropagation();
+
+// Likes
+modalLike.onclick=async()=>{
+  if(!currentLetter)return;
+  let liked=JSON.parse(localStorage.getItem('likedLetters')||'[]');
+  if(liked.includes(currentLetter.id)){alert("Already liked!");return;}
+  await updateDoc(doc(db,"letters",currentLetter.id),{likes:(currentLetter.likes||0)+1});
+  currentLetter.likes=(currentLetter.likes||0)+1;
+  modalLike.textContent=`❤ ${currentLetter.likes}`;
+  liked.push(currentLetter.id);
+  localStorage.setItem('likedLetters',JSON.stringify(liked));
 };
 
-// 💬 Comments live
-function loadComments(letterId){
-  const commentsCol = collection(db, "letters", letterId, "comments");
-  onSnapshot(commentsCol, snapshot => {
-    commentsBox.innerHTML = '';
-    snapshot.docs.forEach(cSnap => {
-      const c = cSnap.data();
-      const div = document.createElement('div');
-      div.className = 'comment';
-      div.textContent = `${c.username}: ${c.text}`;
-      if (c.creator === userId || userId === OWNER_ID) {
-        const del = document.createElement('button');
-        del.textContent = 'Delete';
-        del.onclick = async ()=> await deleteDoc(doc(db,"letters",letterId,"comments",cSnap.id));
+// Delete letter
+modalDelete.onclick=async()=>{
+  if(!confirm("Delete this letter?"))return;
+  await deleteDoc(doc(db,"letters",currentLetter.id));
+  modal.style.display='none';
+};
+
+// Load comments live
+function loadComments(id){
+  const cRef = collection(db,"letters",id,"comments");
+  onSnapshot(cRef,snap=>{
+    commentsBox.innerHTML='';
+    snap.docs.forEach(c=>{
+      const data=c.data();
+      const div=document.createElement('div');
+      div.className='comment';
+      div.textContent=`${data.username}: ${data.text}`;
+      if(data.creator===userId || userId===OWNER_ID){
+        const del=document.createElement('button');
+        del.textContent='Delete';
+        del.onclick=async()=>await deleteDoc(doc(db,"letters",id,"comments",c.id));
         div.appendChild(del);
       }
       commentsBox.appendChild(div);
@@ -278,12 +209,12 @@ function loadComments(letterId){
   });
 }
 
-// ✏️ Add comment
-submitComment.onclick = async ()=>{
-  const txt = newComment.value.trim();
-  if(!txt) return;
-  const commentsCol = collection(db,"letters",currentLetterId,"comments");
-  await addDoc(commentsCol,{
+// Add comment
+submitComment.onclick=async()=>{
+  const txt=newComment.value.trim();
+  if(!txt)return;
+  const cRef=collection(db,"letters",currentLetter.id,"comments");
+  await addDoc(cRef,{
     text:txt,
     creator:userId,
     username:`user-${userId.slice(0,5)}`,
@@ -291,7 +222,12 @@ submitComment.onclick = async ()=>{
   });
   newComment.value='';
 };
-</script>
 
+// Live load letters
+onSnapshot(collection(db,"letters"),snap=>{
+  const letters=snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderLetters(letters);
+});
+</script>
 </body>
 </html>

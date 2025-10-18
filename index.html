@@ -689,6 +689,16 @@ function setupManageDesignsRealtime() {
 
 // ----------------- Submit Modal Note -----------------
 modalSubmit.addEventListener('click', async ()=>{
+  // Get text & color first
+  let text, color;
+  if(currentMember === 'letters'){
+    text = document.getElementById('letter-text').value.trim();
+    color = document.getElementById('letter-color-picker').value;
+  } else {
+    text = noteText.value.trim();
+    color = colorPicker.value;
+  }
+
   if(!text){ alert('Write something!'); return; }
 
   const week = getCurrentWeek();
@@ -704,24 +714,6 @@ modalSubmit.addEventListener('click', async ()=>{
     creator: userId
   };
 
-
-
-
-
-let text, color;
-if(currentMember === 'letters'){
-  text = document.getElementById('letter-text').value.trim();
-  color = document.getElementById('letter-color-picker').value;
-} else {
-  text = noteText.value.trim();
-  color = colorPicker.value;
-}
-
-
-
-
-
-  
   try{
     await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
@@ -744,6 +736,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

@@ -313,19 +313,26 @@ Thank you for helping us celebrate and support RII7E! 🧡
           <option value="rii7e">RII7E</option>
           <option value="brii7e">BRII7E</option>
         </select>
-        <label>Text color</label>
-        <input id="color-picker" type="color" value="#000000">
-        <!-- ✅ For letters only -->
+        <!-- ✅ Regular notes -->
+<div id="note-section" style="display:block;">
+  <label>Text color</label>
+  <input id="color-picker" type="color" value="#000000">
+  <label style="margin-top:10px">Write your message (max 300 chars)</label>
+  <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
+</div>
+
+<!-- ✅ Letters only -->
+<div id="letter-section" style="display:none;">
   <label>Text color</label>
   <input id="letter-color-picker" type="color" value="#000000">
   <label style="margin-top:10px">Write your letter (max 2000 chars)</label>
   <textarea id="letter-text" maxlength="2000" placeholder="Write your letter (max 2000 chars)"></textarea>
-        <label style="margin-top:10px">Write your message (max 300 chars)</label>
-        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
-        <div class="modal-actions">
-          <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
-          <button class="btn btn-submit" id="modal-submit">Submit</button>
-        </div>
+</div>
+
+<div class="modal-actions">
+  <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
+  <button class="btn btn-submit" id="modal-submit">Submit</button>
+</div>
       </div>
     </div>
   </div>
@@ -414,6 +421,25 @@ function setupModal() {
     memberSelect.style.display = 'none';
     memberSelectLabel.style.display = 'none';
   }
+
+
+
+if(currentMember === 'letters'){
+  document.getElementById('note-section').style.display = 'none';
+  document.getElementById('letter-section').style.display = 'block';
+  previewText.style.color = document.getElementById('letter-color-picker').value;
+  document.getElementById('letter-text').value = '';
+} else {
+  document.getElementById('note-section').style.display = 'block';
+  document.getElementById('letter-section').style.display = 'none';
+  previewText.style.color = colorPicker.value;
+  noteText.value = '';
+}
+
+
+
+
+  
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -667,6 +693,24 @@ modalSubmit.addEventListener('click', async ()=>{
     creator: userId
   };
 
+
+
+
+
+let text, color;
+if(currentMember === 'letters'){
+  text = document.getElementById('letter-text').value.trim();
+  color = document.getElementById('letter-color-picker').value;
+} else {
+  text = noteText.value.trim();
+  color = colorPicker.value;
+}
+
+
+
+
+
+  
   try{
     await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
@@ -689,5 +733,6 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 

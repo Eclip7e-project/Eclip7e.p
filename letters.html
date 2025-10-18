@@ -247,35 +247,57 @@ onSnapshot(notesCol, snapshot=>{
 });
 
 // ----------------- Comments -----------------
-async function loadComments(){
-  if(commentsUnsubscribe) commentsUnsubscribe(); 
-  commentsList.innerHTML='';
 
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp','asc'));
+import { serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-  commentsUnsubscribe = onSnapshot(q, snapshot=>{
-    commentsList.innerHTML='';
-    snapshot.docs.forEach(docSnap=>{
+async function loadComments() {
+  if (commentsUnsubscribe) commentsUnsubscribe();
+  commentsList.innerHTML = "";
+
+  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+  const q = query(commentsCol, orderBy('timestamp', 'asc'));
+
+  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+    commentsList.innerHTML = "";
+    snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const div = document.createElement('div');
-      div.className='comment';
-      div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
+      div.className = 'comment';
+      div.innerHTML = `
+        <span class="username">${data.username || "Anonymous"}:</span>
+        <span class="text">${data.text}</span>
+      `;
 
-      if(data.creator === userId || userId === "cris_owner_001"){
+      // --- Edit/Delete Buttons for creator or owner ---
+      if (data.creator === userId || userId === "cris_owner_001") {
+        const btnWrap = document.createElement('div');
+        btnWrap.style.display = "flex";
+        btnWrap.style.gap = "4px";
+        btnWrap.style.marginTop = "4px";
+
         const editBtn = document.createElement('button');
-        editBtn.textContent='Edit';
-        editBtn.onclick=async ()=>{
-          const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = async () => {
+          const newText = prompt('Edit your comment:', data.text);
+          if (newText && newText.trim() !== "") {
+            await updateDoc(
+              doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
+              { text: newText.trim(), edited: true }
+            );
+          }
         };
+
         const delBtn = document.createElement('button');
-        delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{
-          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async () => {
+          if (confirm('Delete this comment?')) {
+            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
+          }
         };
-        div.appendChild(editBtn);
-        div.appendChild(delBtn);
+
+        btnWrap.appendChild(editBtn);
+        btnWrap.appendChild(delBtn);
+        div.appendChild(btnWrap);
       }
 
       commentsList.appendChild(div);
@@ -283,19 +305,27 @@ async function loadComments(){
   });
 }
 
-// Submit comment
-submitComment.onclick = async ()=>{
+// ----------------- Submit Comment -----------------
+submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if(!text || !currentModalNote) return;
-  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  await addDoc(commentsCol,{
-    text,
-    username,
-    creator:userId,
-    timestamp: new Date()
-  });
-  commentInput.value='';
+  if (!text || !currentModalNote) return;
+
+  try {
+    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+    await addDoc(commentsCol, {
+      text,
+      username,
+      creator: userId,
+      timestamp: serverTimestamp()
+    });
+    commentInput.value = "";
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    alert("Failed to send comment — check Firestore permissions.");
+  }
 };
+
 </script>
 </body>
 </html>
+

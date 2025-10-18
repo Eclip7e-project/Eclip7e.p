@@ -131,9 +131,10 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -143,10 +144,17 @@ const firebaseConfig = {
   appId:"1:962319162792:web:8fad2b11c316766c8a119d"
 };
 initializeApp(firebaseConfig);
+
 const db = getFirestore();
 const auth = getAuth();
+signInAnonymously(auth).catch(console.error);
 
-// DOM
+let currentUser = null;
+onAuthStateChanged(auth, user => {
+  if(user) currentUser = user;
+});
+
+// DOM Elements
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -158,42 +166,23 @@ const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const submitComment = document.getElementById('submit-comment');
 
-let currentUser = null;
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// Prompt username
-let username = localStorage.getItem('username');
-if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-
-// ----------------- Firebase Auth -----------------
-signInAnonymously(auth).catch(console.error);
-onAuthStateChanged(auth, user => {
-  if(user){
-    currentUser = user;
-    console.log("Signed in UID:", user.uid);
-  }
+// ----------------- Load Notes -----------------
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot => {
+  const notes = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
+  renderNotes(notes);
 });
 
-// ----------------- Render Notes -----------------
 function renderNotes(notes){
-  wall.innerHTML='';
-  notes.forEach(n=>{
-    const div=document.createElement('div');
-    div.className='sticky-note';
-
-    const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
-
-    const textDiv=document.createElement('div');
-    textDiv.className='text';
-    textDiv.textContent = n.text;
-    textDiv.style.color = n.color || 'white';
-
-    div.appendChild(imgEl);
-    div.appendChild(textDiv);
-    div.onclick = ()=>openModal(n);
-
+  wall.innerHTML = '';
+  notes.forEach(note=>{
+    const div = document.createElement('div');
+    div.className = 'sticky-note';
+    div.innerHTML = `<img src="${note.img}"><div class="text">${note.text}</div>`;
+    div.onclick = ()=> openModal(note);
     wall.appendChild(div);
   });
 }
@@ -207,77 +196,57 @@ async function openModal(note){
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
-  modalText.style.color = currentModalNote.color || 'white';
-  modalText.style.overflow='auto';
-  modalText.style.whiteSpace='pre-wrap';
-  modalText.style.wordBreak='break-word';
-  modalText.style.textAlign='center';
-  modalText.style.maxHeight='80vh';
-  modalText.style.padding='10px';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-  modalDelete.style.display = (currentUser && (currentModalNote.creator === currentUser.uid || currentUser.uid === "cris_owner_001")) ? 'inline-block' : 'none';
+  modalDelete.style.display = (currentModalNote.creator === currentUser.uid || currentUser.uid === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
 
   loadComments();
 }
 
-// ----------------- Close modal -----------------
-modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
+// ----------------- Close Modal -----------------
+modalClose.onclick = e => { e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
 // ----------------- Likes -----------------
-modalLike.onclick = async () => {
-  if(!currentModalNote || !currentUser) return;
-  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+modalLike.onclick = async ()=>{
+  if(!currentModalNote) return;
+  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id), { likes: (currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
 };
 
-// ----------------- Delete note -----------------
-modalDelete.onclick = async () => {
-  if(!currentModalNote || !currentUser) return;
-  if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
-  modal.style.display='none';
+// ----------------- Delete Note -----------------
+modalDelete.onclick = async ()=>{
+  if(!currentModalNote) return;
+  if(confirm("Delete this note?")) {
+    await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
+    modal.style.display = 'none';
+  }
 };
 
-// ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, ...d.data()}));
-  renderNotes(notes);
-});
-
-// ----------------- Comments -----------------
+// ----------------- Load Comments -----------------
 async function loadComments(){
-  if(commentsUnsubscribe) commentsUnsubscribe(); 
-  commentsList.innerHTML='';
+  if(commentsUnsubscribe) commentsUnsubscribe();
+  commentsList.innerHTML = '';
 
   const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
 
   commentsUnsubscribe = onSnapshot(q, snapshot=>{
-    commentsList.innerHTML='';
+    commentsList.innerHTML = '';
     snapshot.docs.forEach(docSnap=>{
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
       div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
 
-      if(currentUser && (data.creator === currentUser.uid || currentUser.uid === "cris_owner_001")){
-        const editBtn = document.createElement('button');
-        editBtn.textContent='Edit';
-        editBtn.onclick=async ()=> {
-          const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
-        };
+      if(data.creator === currentUser.uid || currentUser.uid === "cris_owner_001"){
         const delBtn = document.createElement('button');
-        delBtn.textContent='Delete';
-        delBtn.onclick=async ()=> {
-          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async ()=>{
+          if(confirm("Delete this comment?")) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
-        div.appendChild(editBtn);
         div.appendChild(delBtn);
       }
 
@@ -286,21 +255,23 @@ async function loadComments(){
   });
 }
 
-// Submit comment
+// ----------------- Submit Comment -----------------
 submitComment.onclick = async ()=>{
   if(!currentModalNote || !currentUser) return;
   const text = commentInput.value.trim();
   if(!text) return;
 
   const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
-  await addDoc(commentsCol,{
+  await addDoc(commentsCol, {
     text,
-    username,
+    username: localStorage.getItem('username') || 'Anonymous',
     creator: currentUser.uid,
-    timestamp: new Date()
+    timestamp: serverTimestamp()
   });
   commentInput.value='';
 };
+
 </script>
 </body>
 </html>
+

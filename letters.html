@@ -33,10 +33,10 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   top:2.3cm;
   left:4.6cm;
   right:4.3cm;
-  color:inherit;
-  font-size:0.6rem;
+  font-size:0.7rem;
+  color:black;
   white-space:pre-wrap;
-  overflow-wrap:break-word;
+  word-wrap:break-word;
   text-align:center;
 }
 
@@ -72,8 +72,8 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
 .comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
 
-#comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
-#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
+#comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; font-size:0.8rem; }
+#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; font-size:0.8rem; }
 
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
@@ -138,7 +138,7 @@ const db = getFirestore();
 // Username + ID
 let username = localStorage.getItem('username');
 if (!username) {
-  username = prompt("Choose a username for your letters/comments:") || "Anonymous";
+  username = prompt("Choose a username:") || "Anonymous";
   localStorage.setItem('username', username);
 }
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
@@ -157,7 +157,7 @@ const submitComment = document.getElementById('submit-comment');
 
 let currentModalNote = null;
 
-// Open modal
+// ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
@@ -174,12 +174,11 @@ async function openModal(note){
   loadComments();
 }
 
-// Close modal
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// Likes
+// ----------------- Likes -----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
@@ -191,15 +190,15 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// Delete note
+// ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete your letter?")) return;
+  if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// Render letters
+// ----------------- Render letters -----------------
 function renderNotes(notes){
   wall.innerHTML='';
   notes.forEach(n=>{
@@ -212,26 +211,25 @@ function renderNotes(notes){
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent=n.text;
-    textDiv.style.color = n.color || 'black';
+    textDiv.style.color=n.color || 'black';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-
     div.onclick = ()=>openModal(n);
 
     wall.appendChild(div);
   });
 }
 
-// Firestore real-time notes
+// ----------------- Firestore real-time notes -----------------
 const notesCol = collection(db,'notes','letters','memberNotes');
 onSnapshot(notesCol, snapshot=>{
   const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
 });
 
-// Load comments
-async function loadComments(){
+// ----------------- Comments -----------------
+function loadComments(){
   commentsList.innerHTML='';
   const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
@@ -241,25 +239,26 @@ async function loadComments(){
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
-      div.innerHTML = `<span class="username">${data.username}:</span><span class="text">${data.text}</span>`;
+      div.innerHTML = `
+        <span class="username">${data.username}:</span>
+        <textarea class="text" rows="2">${data.text}</textarea>
+      `;
+
+      const textarea = div.querySelector('textarea');
+      textarea.readOnly = (data.creator !== userId);
 
       if(data.creator === userId){
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = async () => {
-          const newText = prompt('Edit comment:', data.text);
-          if(newText) await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText});
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent='Save';
+        saveBtn.onclick = async ()=>{
+          await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:textarea.value});
         };
-
         const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = async () => {
-          if(confirm('Delete comment?')){
-            await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
-          }
+        delBtn.textContent='Delete';
+        delBtn.onclick = async ()=>{
+          if(confirm('Delete comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
-
-        div.appendChild(editBtn);
+        div.appendChild(saveBtn);
         div.appendChild(delBtn);
       }
 
@@ -268,7 +267,6 @@ async function loadComments(){
   });
 }
 
-// Submit comment
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text) return;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anton Letters - RII7E Project</title>
+<title>RII7E & BRII7E Letters</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
@@ -153,15 +153,15 @@ footer a:hover { text-decoration:underline; }
 <body>
 
 <header>
-  <img src="antonbanner.jpg" alt="Anton Banner" class="banner">
+  <img src="rii7ebanner.jpg" alt="RII7E & BRII7E Banner" class="banner">
   <div class="header-text">
-    <h1>Anton Letters</h1>
-    <p>All submitted letters for Anton. Show love by clicking ❤ and commenting!</p>
+    <h1>Letters Wall</h1>
+    <p>All submitted letters for RII7E & BRII7E. Click ❤ to like, comment, and view!</p>
     <a href="index.html">← Back to Homepage</a>
   </div>
 </header>
 
-<section class="wall" id="anton-wall"></section>
+<section class="wall" id="letters-wall"></section>
 
 <!-- Modal -->
 <div id="modal">
@@ -203,8 +203,7 @@ initializeApp(firebaseConfig);
 const db = getFirestore();
 
 // Variables
-const memberName = "anton";
-const wall = document.getElementById('anton-wall');
+const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalText = document.getElementById('modal-text');
@@ -221,9 +220,9 @@ let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', c
 // Open modal
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes',memberName,'memberNotes',note.id);
+  const docRef = doc(db,'notes',note.member,'memberNotes',note.id);
   const docSnap = await getDoc(docRef);
-  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
+  if(docSnap.exists()) currentModalNote = {id: docSnap.id, member: note.member, ...docSnap.data()};
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
@@ -245,7 +244,7 @@ modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'notes',currentModalNote.member,'memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
@@ -256,7 +255,7 @@ modalLike.onclick = async () => {
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id));
+  await deleteDoc(doc(db,'notes',currentModalNote.member,'memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
@@ -297,17 +296,18 @@ function renderNotes(notes){
   });
 }
 
-// Firestore realtime for notes
-const notesCol = collection(db,'notes',memberName,'memberNotes');
+// Firestore realtime - all notes collection
+const notesCol = collection(db,'allNotes'); // unified collection for RII7E & BRII7E letters
 onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  const notes=snapshot.docs.map(d=>({id:d.id, ...d.data()}));
   renderNotes(notes);
 });
 
 // COMMENTS
 async function loadComments(){
   commentSection.innerHTML='';
-  const commentsCol = collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments');
+  if(!currentModalNote) return;
+  const commentsCol = collection(db,'allNotes',currentModalNote.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
   onSnapshot(q, snapshot=>{
     commentSection.innerHTML='';
@@ -324,7 +324,7 @@ async function loadComments(){
 // Add comment
 commentSubmit.onclick = async ()=>{
   if(!commentInput.value.trim() || !currentModalNote) return;
-  await addDoc(collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments'),{
+  await addDoc(collection(db,'allNotes',currentModalNote.id,'comments'),{
     user: userId,
     text: commentInput.value,
     timestamp: new Date()

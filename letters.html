@@ -176,7 +176,9 @@ const modalClose = document.getElementById('modal-close');
 const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const submitComment = document.getElementById('submit-comment');
+const commentsCol = collection(db, 'notes', 'letters', currentModalNote.id, 'comments');
 
+  
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
@@ -206,7 +208,7 @@ function renderNotes(notes){
 // ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','letters','memberNotes',note.id);
+  const docRef = doc(db,'notes','letters',note.id); // remove 'memberNotes'
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
@@ -246,9 +248,9 @@ modalDelete.onclick = async () => {
 };
 
 // ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
+const notesCol = collection(db,'notes','letters');
 
-// Auto-create collection/sample note if empty
+// Auto-create a first letter if empty
 onSnapshot(notesCol, snapshot=>{
   if(snapshot.empty){
     addDoc(notesCol,{
@@ -262,6 +264,7 @@ onSnapshot(notesCol, snapshot=>{
   const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
 });
+
 
 // ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
@@ -431,3 +434,4 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+

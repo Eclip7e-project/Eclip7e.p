@@ -17,64 +17,31 @@ body {
   text-align:center;
 }
 
-/* HEADER */
 header { display:flex; flex-direction:column; align-items:center; background:black; border-bottom:2px solid gold; }
 header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2px solid gold; }
 .header-text { text-align:center; padding:20px; }
 .header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
 .header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
 
-/* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
 .sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
-.sticky-note .text {
-  position:absolute;
-  top:60px;
-  left:35px;
-  right:25px;
-  bottom:15px;
-  color:white;
-  font-size:0.4rem;
-  white-space:pre-wrap;
-  word-break:break-word;
-  text-align:center;
-  overflow:auto;
-  pointer-events:none;
-  text-shadow:1px 1px 2px black;
-}
+.sticky-note .text { position:absolute; top:60px; left:10px; right:10px; bottom:15px; color:white; font-size:0.4rem; white-space:pre-wrap; word-break:break-word; text-align:center; overflow:auto; pointer-events:none; text-shadow:1px 1px 2px black; }
 
-/* Highlight top note */
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
-/* MODAL */
 #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
 #modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; padding:20px; }
 #modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
-/* Image container */
 #modal-image-container { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; }
 #modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
-#modal-text { 
-  position:absolute;
-  top:2.3cm;
-  left:4.6cm;
-  right:4.3cm;
-  color:black;
-  font-size:0.5rem;
-  white-space:pre-wrap;
-  word-wrap:break-word;
-  text-align:center;
-  pointer-events:none;
-  text-shadow:1px 1px 3px white;
-}
+#modal-text { position:absolute; top:2.3cm; left:4.6cm; right:4.3cm; color:black; font-size:0.5rem; white-space:pre-wrap; word-wrap:break-word; text-align:center; pointer-events:none; text-shadow:1px 1px 3px white; }
 
-/* Buttons under image */
 #modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
 #modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
 #modal-delete { background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
 
-/* Comments */
 #modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; }
 #modal-comments h3 { margin-top:0; color:gold; text-align:center; }
 .comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
@@ -89,7 +56,6 @@ footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
 
-/* ----------------- MOBILE RESPONSIVENESS ----------------- */
 @media (max-width: 768px) {
   #modal-content { flex-direction: column; width: 95%; height: 90vh; overflow-y: auto; padding: 10px; }
   #modal-image-container { width: 100%; flex: none; align-items: center; }
@@ -116,7 +82,6 @@ footer a:hover { text-decoration:underline; }
 
 <section class="wall" id="letters-wall"></section>
 
-<!-- Modal -->
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
@@ -147,6 +112,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// ------------------ Firebase ------------------
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -160,12 +126,12 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
-// Username & userId
+// ------------------ User ------------------
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
-// DOM
+// ------------------ DOM ------------------
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -180,7 +146,7 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// ----------------- Render Notes -----------------
+// ------------------ Render Notes ------------------
 function renderNotes(notes){
   wall.innerHTML='';
   notes.forEach(n=>{
@@ -197,13 +163,26 @@ function renderNotes(notes){
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-    div.onclick = ()=>openModal(n);
 
+    // Optional creator name
+    if(n.creatorName && n.creatorName.trim()!==""){
+      const creatorDiv=document.createElement('div');
+      creatorDiv.style.position='absolute';
+      creatorDiv.style.bottom='5px';
+      creatorDiv.style.width='100%';
+      creatorDiv.style.fontSize='0.5rem';
+      creatorDiv.style.color='gold';
+      creatorDiv.style.textAlign='center';
+      creatorDiv.textContent = n.creatorName;
+      div.appendChild(creatorDiv);
+    }
+
+    div.onclick = ()=>openModal(n);
     wall.appendChild(div);
   });
 }
 
-// ----------------- Modal -----------------
+// ------------------ Open Modal ------------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
@@ -220,12 +199,12 @@ async function openModal(note){
   loadComments();
 }
 
-// ----------------- Close modal -----------------
+// ------------------ Close Modal ------------------
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// ----------------- Likes -----------------
+// ------------------ Likes ------------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
@@ -237,23 +216,25 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// ----------------- Delete note -----------------
+// ------------------ Delete Note ------------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
+  if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
   if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// ----------------- Firestore real-time notes -----------------
+// ------------------ Firestore Real-time Notes ------------------
 const notesCol = collection(db,'notes','letters','memberNotes');
 onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, creatorName:d.data().creatorName, ...d.data()}));
   renderNotes(notes);
 });
 
-// ----------------- Comments -----------------
+// ------------------ Comments ------------------
 async function loadComments() {
+  if (!currentModalNote) return;
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
@@ -271,8 +252,9 @@ async function loadComments() {
         <span class="text">${data.text}</span>
       `;
 
-      const isOwner = (userId === "cris_owner_001"); 
-      const isCreator = (data.creator === userId);
+      const commentCreator = data.creator || "";
+      const isOwner = userId === "cris_owner_001";
+      const isCreator = commentCreator === userId;
 
       if (isOwner || isCreator) {
         const btnWrap = document.createElement('div');
@@ -285,18 +267,13 @@ async function loadComments() {
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
           if (!newText || newText.trim() === "") return;
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
-          await updateDoc(
-            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+          await updateDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id), { text:newText.trim(), edited:true });
         };
 
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
-          if (confirm('Delete this comment?')) {
+          if(confirm('Delete this comment?')){
             await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
           }
         };
@@ -311,7 +288,7 @@ async function loadComments() {
   });
 }
 
-// ----------------- Submit Comment -----------------
+// ------------------ Submit Comment ------------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
@@ -331,5 +308,6 @@ submitComment.onclick = async () => {
   }
 };
 </script>
+
 </body>
 </html>

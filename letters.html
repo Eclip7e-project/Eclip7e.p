@@ -199,7 +199,6 @@ function renderNotes(notes){
     div.appendChild(textDiv);
 
     div.addEventListener('click', ()=> openModal(n));
-
     wall.appendChild(div);
   });
 }
@@ -287,14 +286,12 @@ async function loadComments() {
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
           if (!newText || newText.trim() === "") return;
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
           await updateDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id), { text: newText.trim(), edited: true });
         };
 
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
             await deleteDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id));
           }

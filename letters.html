@@ -208,7 +208,7 @@ function renderNotes(notes){
 // ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','letters','memberNotes',note.id);
+  const docRef = doc(db,'letters',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
@@ -244,12 +244,12 @@ modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
   if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
-  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
+ await deleteDoc(doc(db,'letters',currentModalNote.id));
   modal.style.display='none';
 };
 
 // ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
+const notesCol = collection(db,'letters');
 onSnapshot(notesCol, snapshot=>{
   const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
@@ -260,7 +260,7 @@ async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
-  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+ const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
   commentsUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -290,7 +290,7 @@ async function loadComments() {
           if (!newText || newText.trim() === "") return;
           if (!isOwner && !isCreator) { alert("No permission"); return; }
           await updateDoc(
-            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
+           doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id),
             { text: newText.trim(), edited: true }
           );
         };
@@ -300,7 +300,7 @@ async function loadComments() {
         delBtn.onclick = async () => {
           if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
-            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
+           await deleteDoc(doc(db,'letters',currentModalNote.id));
           }
         };
 
@@ -320,7 +320,7 @@ submitComment.onclick = async () => {
   if (!text || !currentModalNote) return;
 
   try {
-    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+    const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
     await addDoc(commentsCol, {
       text,
       username,
@@ -336,5 +336,3 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
-
-ok so i can delete letters now but cant submit comments

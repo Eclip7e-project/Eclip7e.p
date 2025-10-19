@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Letters Wall - RII7E Project</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 body {
   font-family: 'Playfair Display', serif;
@@ -29,12 +30,12 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:10%;
-  left:5%;
-  right:5%;
-  bottom:5%;
+  top:60px;
+  left:35px;
+  right:25px;
+  bottom:15px;
   color:white;
-  font-size:0.5rem;
+  font-size:0.4rem;
   white-space:pre-wrap;
   word-break:break-word;
   text-align:center;
@@ -43,13 +44,30 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   text-shadow:1px 1px 2px black;
 }
 
+/* Highlight top note */
+.top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
+
 /* MODAL */
 #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
-#modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; padding:20px; flex-wrap:wrap; }
+#modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; padding:20px; }
 #modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
-#modal-image-container { position:relative; flex:1 1 45%; display:flex; flex-direction:column; align-items:center; }
-#modal-img { max-width:100%; max-height:70vh; border-radius:15px; object-fit:contain; }
-#modal-text { margin-top:10px; color:white; font-size:0.9rem; text-align:center; word-wrap:break-word; }
+
+/* Image container */
+#modal-image-container { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; }
+#modal-img { max-height:80vh; width:auto; border-radius:15px; object-fit:contain; }
+#modal-text { 
+  position:absolute;
+  top:2.3cm;
+  left:4.6cm;
+  right:4.3cm;
+  color:black;
+  font-size:0.5rem;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  text-align:center;
+  pointer-events:none;
+  text-shadow:1px 1px 3px white;
+}
 
 /* Buttons under image */
 #modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
@@ -57,7 +75,7 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 #modal-delete { background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
 
 /* Comments */
-#modal-comments { flex:1 1 45%; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:70vh; overflow:auto; }
+#modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; }
 #modal-comments h3 { margin-top:0; color:gold; text-align:center; }
 .comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
 .comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
@@ -71,11 +89,17 @@ footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
 
-/* MOBILE */
-@media(max-width:768px){
-  #modal-content { flex-direction:column; width:95%; height:90vh; overflow-y:auto; }
-  #modal-image-container, #modal-comments { flex:1 1 100%; max-height:none; }
-  #modal-img { max-height:50vh; }
+/* ----------------- MOBILE RESPONSIVENESS ----------------- */
+@media (max-width: 768px) {
+  #modal-content { flex-direction: column; width: 95%; height: 90vh; overflow-y: auto; padding: 10px; }
+  #modal-image-container { width: 100%; flex: none; align-items: center; }
+  #modal-img { width: 100%; height: auto; max-height: 50vh; object-fit: contain; }
+  #modal-text { position: absolute; top: 18%; left: 22%; right: 20%; font-size: 0.4rem; color: black; text-shadow: 1px 1px 2px white; }
+  #modal-comments { width: 100%; max-height: none; overflow-y: visible; margin-top: 15px; padding: 10px; }
+  #modal-buttons { margin-top: 10px; justify-content: center; gap: 8px; }
+  #modal-like, #modal-delete, #submit-comment { font-size: 0.9rem; padding: 6px 12px; }
+  .comment .text { font-size: 0.9rem; }
+  #comment-input { font-size: 0.9rem; }
 }
 </style>
 </head>
@@ -123,7 +147,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// Firebase
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -137,11 +160,10 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
-// User
-let username = localStorage.getItem('username') || prompt("Choose a username:") || "Anonymous";
-localStorage.setItem('username', username);
-let userId = localStorage.getItem('userId') || crypto.randomUUID();
-localStorage.setItem('userId', userId);
+// Username & userId
+let username = localStorage.getItem('username');
+if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
 // DOM
 const wall = document.getElementById('letters-wall');
@@ -158,35 +180,39 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// Render Notes
+// ----------------- Render Notes -----------------
 function renderNotes(notes){
-  wall.innerHTML = "";
-  notes.forEach(n => {
-    const div = document.createElement('div');
-    div.className = 'sticky-note';
-    const imgEl = document.createElement('img');
-    imgEl.src = n.img;
-    imgEl.alt = 'Note';
-    const textDiv = document.createElement('div');
+  wall.innerHTML='';
+  notes.forEach(n=>{
+    const div=document.createElement('div');
+    div.className='sticky-note';
+
+    const imgEl=document.createElement('img');
+    imgEl.src=n.img; imgEl.alt='Note';
+
+    const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent = n.text;
     textDiv.style.color = n.color || 'white';
+
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-    div.onclick = () => openModal(n);
+    div.onclick = ()=>openModal(n);
+
     wall.appendChild(div);
   });
 }
 
-// Open Modal
+// ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','letters',note.id);
+  const docRef = doc(db,'notes','letters','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
+  modalText.style.color = currentModalNote.color || 'white';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
@@ -194,76 +220,84 @@ async function openModal(note){
   loadComments();
 }
 
-// Close Modal
-modalClose.onclick = e => { e.stopPropagation(); modal.style.display='none'; }
+// ----------------- Close modal -----------------
+modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
-document.getElementById('modal-content').onclick = e => e.stopPropagation();
+document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// Likes
+// ----------------- Likes -----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','letters',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// Delete Note
+// ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
   if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes','letters',currentModalNote.id));
+  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// Firestore Real-time Notes
-const notesCol = collection(db,'notes','letters');
-onSnapshot(notesCol, snapshot => {
-  const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+// ----------------- Firestore real-time notes -----------------
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
   renderNotes(notes);
 });
 
-// Comments
-async function loadComments(){
-  if(!currentModalNote) return;
-  if(commentsUnsubscribe) commentsUnsubscribe();
+// ----------------- Comments -----------------
+async function loadComments() {
+  if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
-  const commentsCol = collection(db,'notes','letters',currentModalNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp','asc'));
+  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+  const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
-  commentsUnsubscribe = onSnapshot(q, snapshot => {
+  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
     commentsList.innerHTML = "";
-    snapshot.forEach(docSnap => {
+    snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const div = document.createElement('div');
-      div.className='comment';
-      div.innerHTML = `<span class="username">${data.username||"Anonymous"}:</span> <span class="text">${data.text}</span>`;
+      div.className = 'comment';
+      div.innerHTML = `
+        <span class="username">${data.username || "Anonymous"}:</span>
+        <span class="text">${data.text}</span>
+      `;
 
-      const isOwner = (userId === "cris_owner_001");
+      const isOwner = (userId === "cris_owner_001"); 
       const isCreator = (data.creator === userId);
 
-      if(isOwner || isCreator){
+      if (isOwner || isCreator) {
         const btnWrap = document.createElement('div');
-        btnWrap.style.display="flex"; btnWrap.style.gap="4px"; btnWrap.style.marginTop="4px";
+        btnWrap.style.display = "flex";
+        btnWrap.style.gap = "4px";
+        btnWrap.style.marginTop = "4px";
 
         const editBtn = document.createElement('button');
-        editBtn.textContent='Edit';
+        editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
-          if(!newText || newText.trim()==="") return;
-          await updateDoc(doc(db,'notes','letters',currentModalNote.id,'comments',docSnap.id), { text:newText.trim(), edited:true });
+          if (!newText || newText.trim() === "") return;
+          if (!isOwner && !isCreator) { alert("No permission"); return; }
+          await updateDoc(
+            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
+            { text: newText.trim(), edited: true }
+          );
         };
 
         const delBtn = document.createElement('button');
-        delBtn.textContent='Delete';
+        delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if(confirm('Delete this comment?')){
-            await deleteDoc(doc(db,'notes','letters',currentModalNote.id,'comments',docSnap.id));
+          if (!isOwner && !isCreator) { alert("No permission"); return; }
+          if (confirm('Delete this comment?')) {
+            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
           }
         };
 
@@ -277,21 +311,25 @@ async function loadComments(){
   });
 }
 
-// Submit Comment
+// ----------------- Submit Comment -----------------
 submitComment.onclick = async () => {
-  if(!currentModalNote) return;
   const text = commentInput.value.trim();
-  if(!text) return;
-  const commentsCol = collection(db,'notes','letters',currentModalNote.id,'comments');
-  try{
-    await addDoc(commentsCol, { text, username, creator:userId, timestamp:serverTimestamp() });
+  if (!text || !currentModalNote) return;
+
+  try {
+    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+    await addDoc(commentsCol, {
+      text,
+      username,
+      creator: userId,
+      timestamp: serverTimestamp()
+    });
     commentInput.value = "";
-  } catch(err){
-    console.error(err);
+  } catch (err) {
+    console.error("Error adding comment:", err);
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
 </script>
-
 </body>
 </html>

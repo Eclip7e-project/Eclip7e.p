@@ -280,28 +280,19 @@ async function loadComments() {
         btnWrap.style.gap = "4px";
         btnWrap.style.marginTop = "4px";
 
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = async () => {
-          const newText = prompt('Edit your comment:', data.text);
-          if (!newText || newText.trim() === "") return;
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
-          await updateDoc(
-            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
-        };
-
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
-            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
+            try {
+              await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
+            } catch (err) {
+              console.error("Delete failed:", err);
+              alert("Failed to delete comment — check permissions.");
+            }
           }
         };
 
-        btnWrap.appendChild(editBtn);
         btnWrap.appendChild(delBtn);
         div.appendChild(btnWrap);
       }
@@ -327,9 +318,10 @@ submitComment.onclick = async () => {
     commentInput.value = "";
   } catch (err) {
     console.error("Error adding comment:", err);
-    alert("Failed to send comment — check Firestore permissions.");
+    alert("⚠ Failed to send comment — check Firestore rules for comments path:\nnotes/letters/memberNotes/{noteId}/comments/{commentId}");
   }
 };
 </script>
 </body>
 </html>
+

@@ -7,9 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-/* ... keep your existing CSS exactly as you have ... */
+/* … Keep all your CSS exactly as before … */
 body { font-family: 'Playfair Display', serif; background-color:black; background-image:url('https://www.transparenttextures.com/patterns/stardust.png'); color:white; margin:0; padding:0; text-align:center; }
-/* HEADER, WALL, MODAL, FOOTER, etc. -- keep everything exactly as you already wrote */
+/* Rest of your CSS unchanged … */
 </style>
 </head>
 <body>
@@ -25,7 +25,6 @@ body { font-family: 'Playfair Display', serif; background-color:black; backgroun
 
 <section class="wall" id="letters-wall"></section>
 
-<!-- Modal -->
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
@@ -114,14 +113,12 @@ async function openModal(note){
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
-
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'white';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
-
   loadComments();
 }
 
@@ -162,12 +159,12 @@ async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
   if (!currentModalNote) return;
-  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-  const q = query(commentsCol, orderBy('timestamp', 'asc'));
+  const commentsCol = collection(db,'lettersComments', currentModalNote.id,'comments');
+  const q = query(commentsCol, orderBy('timestamp','asc'));
 
-  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
-    commentsList.innerHTML = "";
-    snapshot.forEach((docSnap) => {
+  commentsUnsubscribe = onSnapshot(q, snapshot=>{
+    commentsList.innerHTML="";
+    snapshot.forEach(docSnap=>{
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className = 'comment';
@@ -175,55 +172,37 @@ async function loadComments() {
 
       const isOwner = (userId === "cris_owner_001") || (data.creator === userId);
 
-      if (isOwner) {
-        const btnWrap = document.createElement('div');
-        btnWrap.style.display = "flex"; btnWrap.style.gap = "4px";
-
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = async () => {
-          const newText = prompt('Edit your comment:', data.text);
-          if (!newText || newText.trim() === "") return;
-          await updateDoc(
-            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+      if(isOwner){
+        const btnWrap = document.createElement('div'); btnWrap.style.display="flex"; btnWrap.style.gap="4px";
+        const editBtn = document.createElement('button'); editBtn.textContent='Edit';
+        editBtn.onclick = async ()=>{
+          const newText = prompt('Edit your comment:',data.text);
+          if(!newText || newText.trim()==="") return;
+          await updateDoc(doc(db,'lettersComments',currentModalNote.id,'comments',docSnap.id),{ text:newText.trim(), edited:true });
         };
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = async () => {
-          if (confirm('Delete this comment?')) {
-            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
-          }
-        };
-
-        btnWrap.appendChild(editBtn);
-        btnWrap.appendChild(delBtn);
+        const delBtn = document.createElement('button'); delBtn.textContent='Delete';
+        delBtn.onclick = async ()=>{ if(confirm('Delete this comment?')) await deleteDoc(doc(db,'lettersComments',currentModalNote.id,'comments',docSnap.id)); };
+        btnWrap.appendChild(editBtn); btnWrap.appendChild(delBtn);
         div.appendChild(btnWrap);
       }
-
       commentsList.appendChild(div);
     });
   });
 }
 
 // ----------------- Submit Comment -----------------
-submitComment.onclick = async () => {
+submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote) return;
-  try {
-    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-    await addDoc(commentsCol, {
-      text,
-      username,
-      creator: userId,
-      timestamp: serverTimestamp()
+  if(!text || !currentModalNote) return;
+  try{
+    const commentsCol = collection(db,'lettersComments', currentModalNote.id,'comments');
+    await addDoc(commentsCol,{
+      text, username, creator:userId, timestamp: serverTimestamp()
     });
-    commentInput.value = "";
-  } catch (err) {
-    console.error("Error adding comment:", err);
-    alert("Failed to send comment — check Firestore rules.");
+    commentInput.value="";
+  } catch(err){
+    console.error(err);
+    alert("Failed to send comment — check Firestore permissions.");
   }
 };
 </script>

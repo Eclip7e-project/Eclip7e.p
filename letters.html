@@ -24,7 +24,7 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
 .sticky-note { width:200px; height:300px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
-.sticky-note .text { position:absolute; top:60px; left:10px; right:10px; bottom:15px; color:white; font-size:0.4rem; white-space:pre-wrap; word-break:break-word; text-align:center; overflow:auto; pointer-events:none; text-shadow:1px 1px 2px black; }
+.sticky-note .text { position:absolute; top:60px; left:35px; right:25px; bottom:15px; color:white; font-size:0.4rem; white-space:pre-wrap; word-break:break-word; text-align:center; overflow:auto; pointer-events:none; text-shadow:1px 1px 2px black; }
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
 #modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; padding:20px; }
@@ -72,7 +72,6 @@ footer a:hover { text-decoration:underline; }
 
 <section class="wall" id="letters-wall"></section>
 
-<!-- Modal -->
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
@@ -103,7 +102,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -117,12 +115,10 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
-// User info
-let username = localStorage.getItem('username') || prompt("Choose username:") || "Anonymous";
-localStorage.setItem('username', username);
+let username = localStorage.getItem('username');
+if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
-// DOM
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -134,37 +130,32 @@ const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const submitComment = document.getElementById('submit-comment');
 
-let currentLetter = null;
+let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// Render letters
-function renderNotes(letters){
-  wall.innerHTML = '';
-  letters.forEach(letter=>{
-    const div = document.createElement('div');
+// Render notes
+function renderNotes(notes){
+  wall.innerHTML='';
+  notes.forEach(n=>{
+    const div=document.createElement('div');
     div.className='sticky-note';
-    const img = document.createElement('img');
-    img.src = letter.img; img.alt='Letter';
-    const textDiv = document.createElement('div');
-    textDiv.className='text'; textDiv.textContent = letter.text; textDiv.style.color = letter.color || 'white';
-    div.appendChild(img); div.appendChild(textDiv);
-    div.onclick = ()=>openModal(letter);
+    div.innerHTML = `<img src="${n.img}" alt="Note"><div class="text" style="color:${n.color||'white'}">${n.text}</div>`;
+    div.onclick = ()=>openModal(n);
     wall.appendChild(div);
   });
 }
 
 // Open modal
-async function openModal(letter){
-  currentLetter = letter;
-  const docRef = doc(db,'letters',letter.id);
+async function openModal(note){
+  currentModalNote = note;
+  const docRef = doc(db,'notes','letters','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
-  if(docSnap.exists()) currentLetter = {id: docSnap.id, ...docSnap.data()};
-
-  modalImg.src = currentLetter.img;
-  modalText.textContent = currentLetter.text;
-  modalText.style.color = currentLetter.color || 'white';
-  modalLike.textContent = `❤ ${currentLetter.likes||0}`;
-  modalDelete.style.display = (currentLetter.creator===userId || userId==="cris_owner_001") ? 'inline-block':'none';
+  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
+  modalImg.src = currentModalNote.img;
+  modalText.textContent = currentModalNote.text;
+  modalText.style.color = currentModalNote.color || 'white';
+  modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
+  modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display='flex';
   loadComments();
 }
@@ -175,73 +166,66 @@ modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
 // Likes
-modalLike.onclick = async ()=>{
-  if(!currentLetter) return;
+modalLike.onclick = async () => {
+  if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
-  if(liked.includes(currentLetter.id)){ alert("Already liked"); return; }
-  await updateDoc(doc(db,'letters',currentLetter.id),{ likes:(currentLetter.likes||0)+1 });
-  currentLetter.likes = (currentLetter.likes||0)+1;
-  modalLike.textContent = `❤ ${currentLetter.likes}`;
-  liked.push(currentLetter.id);
+  if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
+  const noteRef = doc(db,'notes','letters','memberNotes',currentModalNote.id);
+  await updateDoc(noteRef,{ likes:(currentModalNote.likes||0)+1 });
+  currentModalNote.likes++;
+  modalLike.textContent = `❤ ${currentModalNote.likes}`;
+  liked.push(currentModalNote.id);
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// Delete letter
-modalDelete.onclick = async ()=>{
-  if(!currentLetter) return;
-  if(!confirm("Delete this letter?")) return;
-  await deleteDoc(doc(db,'letters',currentLetter.id));
+// Delete note
+modalDelete.onclick = async () => {
+  if(!currentModalNote) return;
+  if(!confirm("Delete this note?")) return;
+  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// Load letters in real-time
-const lettersCol = collection(db,'letters');
-onSnapshot(lettersCol, snapshot=>{
-  const letters = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
-  renderNotes(letters);
+// Real-time notes
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes = snapshot.docs.map(d=>({id:d.id, ...d.data()}));
+  renderNotes(notes);
 });
 
-// ----------------- Comments -----------------
-async function loadComments(){
-  if(commentsUnsubscribe) commentsUnsubscribe();
-  commentsList.innerHTML='';
-
-  const commentsCol = collection(db,'letters',currentLetter.id,'comments');
+// Comments
+async function loadComments() {
+  if (commentsUnsubscribe) commentsUnsubscribe();
+  commentsList.innerHTML = "";
+  const commentsCol = collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
-
   commentsUnsubscribe = onSnapshot(q, snapshot=>{
     commentsList.innerHTML='';
     snapshot.forEach(docSnap=>{
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
-      div.innerHTML = `<span class="username">${data.username||"Anonymous"}:</span>
-                       <span class="text">${data.text}</span>`;
-
-      const isOwner = userId==="cris_owner_001";
-      const isCreator = data.creator===userId;
-
+      div.innerHTML = `<span class="username">${data.username||"Anonymous"}:</span><span class="text">${data.text}</span>`;
+      const isOwner = (userId==="cris_owner_001");
+      const isCreator = (data.creator === userId);
       if(isOwner || isCreator){
-        const btnWrap = document.createElement('div'); btnWrap.style.display="flex"; btnWrap.style.gap="4px"; btnWrap.style.marginTop="4px";
-
+        const btnWrap = document.createElement('div');
+        btnWrap.style.display="flex"; btnWrap.style.gap="4px"; btnWrap.style.marginTop="4px";
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
-        editBtn.onclick = async ()=>{
-          const newText = prompt("Edit comment:", data.text);
-          if(!newText || newText.trim()==="") return;
-          await updateDoc(doc(db,'letters',currentLetter.id,'comments',docSnap.id), { text:newText.trim(), edited:true });
+        editBtn.onclick = async () => {
+          const newText = prompt('Edit your comment:', data.text);
+          if(!newText || !newText.trim()) return;
+          await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id),{text:newText.trim(),edited:true});
         };
-
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
         delBtn.onclick = async ()=>{
-          if(confirm("Delete this comment?")) await deleteDoc(doc(db,'letters',currentLetter.id,'comments',docSnap.id));
+          if(confirm('Delete this comment?')) await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id,'comments',docSnap.id));
         };
-
         btnWrap.appendChild(editBtn); btnWrap.appendChild(delBtn);
         div.appendChild(btnWrap);
       }
-
       commentsList.appendChild(div);
     });
   });
@@ -250,17 +234,16 @@ async function loadComments(){
 // Submit comment
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
-  if(!text || !currentLetter) return;
+  if(!text || !currentModalNote) return;
   try{
-    const commentsCol = collection(db,'letters',currentLetter.id,'comments');
-    await addDoc(commentsCol,{
-      text,
-      username,
-      creator:userId,
-      timestamp: serverTimestamp()
+    await addDoc(collection(db,'notes','letters','memberNotes',currentModalNote.id,'comments'),{
+      text, username, creator:userId, timestamp: serverTimestamp()
     });
     commentInput.value='';
-  } catch(err){ console.error(err); alert("Failed to send comment — check Firestore permissions."); }
+  }catch(err){
+    console.error("Error adding comment:",err);
+    alert("Failed to send comment — check Firestore permissions.");
+  }
 };
 </script>
 </body>

@@ -144,7 +144,7 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, onSnapshot, doc, updateDoc, deleteDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -177,58 +177,59 @@ const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const submitComment = document.getElementById('submit-comment');
 
-let currentModalNote = null;
+let currentLetter = null;
 let commentsUnsubscribe = null;
 
 // ----------------- Render Letters -----------------
 function renderLetters(letters){
   wall.innerHTML='';
-  letters.forEach(n=>{
-    const div=document.createElement('div');
+  letters.forEach(l=>{
+    const div = document.createElement('div');
     div.className='sticky-note';
-
-    const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Letter';
-
-    const textDiv=document.createElement('div');
+    const imgEl = document.createElement('img');
+    imgEl.src = l.img; imgEl.alt='Letter';
+    const textDiv = document.createElement('div');
     textDiv.className='text';
-    textDiv.textContent = n.text;
-    textDiv.style.color = n.color || 'white';
-
+    textDiv.textContent = l.text;
+    textDiv.style.color = l.color || 'white';
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-    div.addEventListener('click', ()=>openModal(n));
-
+    div.onclick = ()=> openModal(l);
     wall.appendChild(div);
   });
 }
 
-// ----------------- Load all letters from all members -----------------
+// ----------------- Load Letters from all members -----------------
 async function loadLetters() {
-  const lettersCollection = collection(db,'letters');
+  const lettersCol = collection(db,'letters');
+  const snapshot = await getDocs(lettersCol);
   const allLetters = [];
-  const snapshot = await getDocs(lettersCollection);
-  for(const memberDoc of snapshot.docs){
+  await Promise.all(snapshot.docs.map(async memberDoc=>{
     const memberId = memberDoc.id;
-    const memberLettersCol = collection(db,'letters', memberId, 'memberLetters');
+    const memberLettersCol = collection(db,'letters', memberId,'memberLetters');
     const memberLettersSnap = await getDocs(memberLettersCol);
-    memberLettersSnap.forEach(docSnap => {
+    memberLettersSnap.forEach(docSnap=>{
       allLetters.push({id: docSnap.id, member: memberId, ...docSnap.data()});
     });
-  }
+  }));
   renderLetters(allLetters);
 }
 
+// Initial load
+loadLetters();
+
 // ----------------- Modal -----------------
 async function openModal(letter){
-  currentModalNote = letter;
-  modalImg.src = letter.img;
-  modalText.textContent = letter.text;
-  modalText.style.color = letter.color || 'white';
-  modalLike.textContent = `❤ ${letter.likes || 0}`;
-  modalDelete.style.display = (letter.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
-  modal.style.display = 'flex';
-
+  currentLetter = letter;
+  const docRef = doc(db,'letters', letter.member,'memberLetters', letter.id);
+  const docSnap = await getDocs(docRef);
+  if(docSnap.exists()) currentLetter = {id: docSnap.id, member: letter.member, ...docSnap.data()};
+  modalImg.src = currentLetter.img;
+  modalText.textContent = currentLetter.text;
+  modalText.style.color = currentLetter.color || 'white';
+  modalLike.textContent = `❤ ${currentLetter.likes || 0}`;
+  modalDelete.style.display = (currentLetter.creator===userId || userId==="cris_owner_001") ? 'inline-block' : 'none';
+  modal.style.display='flex';
   loadComments();
 }
 
@@ -238,90 +239,82 @@ modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
 // ----------------- Likes -----------------
-modalLike.onclick = async () => {
-  if(!currentModalNote) return;
+modalLike.onclick = async ()=>{
+  if(!currentLetter) return;
   let liked = JSON.parse(localStorage.getItem('likedLetters')||'[]');
-  if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  const docRef = doc(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id);
-  await updateDoc(docRef,{ likes:(currentModalNote.likes||0)+1 });
-  currentModalNote.likes = (currentModalNote.likes||0)+1;
-  modalLike.textContent = `❤ ${currentModalNote.likes}`;
-  liked.push(currentModalNote.id);
+  if(liked.includes(currentLetter.id)){ alert("Already liked"); return; }
+  const letterDoc = doc(db,'letters', currentLetter.member,'memberLetters', currentLetter.id);
+  await updateDoc(letterDoc,{likes:(currentLetter.likes||0)+1});
+  currentLetter.likes = (currentLetter.likes||0)+1;
+  modalLike.textContent = `❤ ${currentLetter.likes}`;
+  liked.push(currentLetter.id);
   localStorage.setItem('likedLetters', JSON.stringify(liked));
 };
 
-// ----------------- Delete letter -----------------
-modalDelete.onclick = async () => {
-  if(!currentModalNote) return;
-  if(!confirm("Delete this letter?")) return;
-  if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
-  await deleteDoc(doc(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id));
+// ----------------- Delete Letter -----------------
+modalDelete.onclick = async ()=>{
+  if(!currentLetter) return;
+  if(currentLetter.creator!==userId && userId!=="cris_owner_001"){ alert("No permission"); return; }
+  const letterDoc = doc(db,'letters', currentLetter.member,'memberLetters', currentLetter.id);
+  await deleteDoc(letterDoc);
   modal.style.display='none';
-  loadLetters();
 };
 
 // ----------------- Comments -----------------
-async function loadComments(){
-  if(!currentModalNote) return;
+async function loadComments() {
   if(commentsUnsubscribe) commentsUnsubscribe();
-  commentsList.innerHTML = '';
-  const commentsCol = collection(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id,'comments');
+  commentsList.innerHTML='';
+  const commentsCol = collection(db,'letters', currentLetter.member,'memberLetters', currentLetter.id,'comments');
   const q = query(commentsCol, orderBy('timestamp','asc'));
-  onSnapshot(q, snapshot => {
+  commentsUnsubscribe = onSnapshot(q, snapshot=>{
     commentsList.innerHTML='';
     snapshot.forEach(docSnap=>{
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className='comment';
-      div.innerHTML = `<span class="username">${data.username||"Anonymous"}:</span> <span class="text">${data.text}</span>`;
-
+      div.innerHTML=`<span class="username">${data.username||"Anonymous"}:</span>
+                     <span class="text">${data.text}</span>`;
       const isOwner = userId==="cris_owner_001";
       const isCreator = data.creator===userId;
-
-      if(isOwner || isCreator){
+      if(isOwner||isCreator){
         const btnWrap = document.createElement('div');
         btnWrap.style.display="flex"; btnWrap.style.gap="4px"; btnWrap.style.marginTop="4px";
-
         const editBtn = document.createElement('button');
         editBtn.textContent='Edit';
-        editBtn.onclick=async ()=>{
+        editBtn.onclick = async ()=>{
           const newText = prompt('Edit your comment:', data.text);
-          if(!newText||!newText.trim()) return;
-          await updateDoc(doc(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id,'comments', docSnap.id), { text:newText.trim(), edited:true });
+          if(!newText || newText.trim()==="") return;
+          await updateDoc(doc(db,'letters',currentLetter.member,'memberLetters',currentLetter.id,'comments',docSnap.id),{text:newText.trim(), edited:true});
         };
-
         const delBtn = document.createElement('button');
         delBtn.textContent='Delete';
-        delBtn.onclick=async ()=>{
-          if(confirm('Delete this comment?')){
-            await deleteDoc(doc(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id,'comments', docSnap.id));
+        delBtn.onclick = async ()=>{
+          if(confirm("Delete this comment?")){
+            await deleteDoc(doc(db,'letters',currentLetter.member,'memberLetters',currentLetter.id,'comments',docSnap.id));
           }
         };
-
-        btnWrap.appendChild(editBtn); btnWrap.appendChild(delBtn);
+        btnWrap.appendChild(editBtn);
+        btnWrap.appendChild(delBtn);
         div.appendChild(btnWrap);
       }
-
       commentsList.appendChild(div);
     });
   });
 }
 
 // ----------------- Submit Comment -----------------
-submitComment.onclick=async ()=>{
-  if(!currentModalNote) return;
+submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
-  if(!text) return;
-  const commentsCol = collection(db,'letters', currentModalNote.member,'memberLetters', currentModalNote.id,'comments');
-  await addDoc(commentsCol,{
-    text, username, creator:userId, timestamp: serverTimestamp()
-  });
-  commentInput.value='';
+  if(!text || !currentLetter) return;
+  try{
+    const commentsCol = collection(db,'letters',currentLetter.member,'memberLetters',currentLetter.id,'comments');
+    await addDoc(commentsCol,{text, username, creator:userId, timestamp:serverTimestamp()});
+    commentInput.value='';
+  }catch(err){
+    console.error("Error sending comment:", err);
+    alert("Failed to send comment — check Firestore permissions.");
+  }
 };
-
-// ----------------- Initialize -----------------
-loadLetters();
 </script>
-
 </body>
 </html>

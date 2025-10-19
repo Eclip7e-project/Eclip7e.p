@@ -198,7 +198,6 @@ function renderNotes(notes){
     div.appendChild(imgEl);
     div.appendChild(textDiv);
 
-    // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
 
     wall.appendChild(div);
@@ -232,7 +231,7 @@ modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+  await updateDoc(doc(db,'letters',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
@@ -244,7 +243,7 @@ modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
   if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
- await deleteDoc(doc(db,'letters',currentModalNote.id));
+  await deleteDoc(doc(db,'letters',currentModalNote.id));
   modal.style.display='none';
 };
 
@@ -260,7 +259,7 @@ async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
- const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
+  const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
   commentsUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -289,10 +288,7 @@ async function loadComments() {
           const newText = prompt('Edit your comment:', data.text);
           if (!newText || newText.trim() === "") return;
           if (!isOwner && !isCreator) { alert("No permission"); return; }
-          await updateDoc(
-           doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+          await updateDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id), { text: newText.trim(), edited: true });
         };
 
         const delBtn = document.createElement('button');
@@ -300,7 +296,7 @@ async function loadComments() {
         delBtn.onclick = async () => {
           if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
-           await deleteDoc(doc(db,'letters',currentModalNote.id));
+            await deleteDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id));
           }
         };
 

@@ -255,20 +255,24 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
-let currentUser = null;
+// ----------------- Simple Comments -----------------
+let userId = localStorage.getItem('userId');
+if (!userId) {
+  userId = crypto.randomUUID();
+  localStorage.setItem('userId', userId);
+}
 
-// Wait for Firebase anonymous login
-onAuthStateChanged(auth, user => {
-  if(user){
-    currentUser = user;
-    console.log("Logged in anonymously as:", user.uid);
-  } else {
-    console.error("Anonymous login failed");
-  }
-});
+let username = localStorage.getItem('username');
+if (!username) {
+  username = prompt("Choose a username:") || "Anonymous";
+  localStorage.setItem('username', username);
+}
 
+let commentsUnsubscribe = null;
+
+// Load comments
 async function loadComments() {
-  if (!currentModalNote || !currentUser) return;
+  if (!currentModalNote) return;
   commentsList.innerHTML = "";
 
   const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
@@ -287,17 +291,17 @@ async function loadComments() {
         <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>
       `;
 
-      const isOwner = (data.creator === currentUser.uid || currentUser.uid === "cris_owner_001");
-      if (isOwner) {
+      // Only creator can edit/delete
+      if (data.creator === userId) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.onclick = async () => {
           const newText = prompt("Edit comment:", data.text);
           if (!newText || !newText.trim()) return;
-          await updateDoc(
-            doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+          await updateDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id), {
+            text: newText.trim(),
+            edited: true
+          });
         };
 
         const delBtn = document.createElement("button");
@@ -316,17 +320,17 @@ async function loadComments() {
   });
 }
 
-// Add new comment
+// Submit comment
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote || !currentUser) return;
+  if (!text || !currentModalNote) return;
 
   try {
     const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
       username,
-      creator: currentUser.uid,
+      creator: userId,
       timestamp: serverTimestamp()
     });
 
@@ -340,6 +344,7 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

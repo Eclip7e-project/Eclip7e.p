@@ -266,7 +266,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// ---------------- Comments ----------------
+// ---------- Comments logic only ----------
 async function loadComments() {
   if (!currentModalNote) return;
   commentsList.innerHTML = "";
@@ -277,21 +277,27 @@ async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsUnsubscribe = onSnapshot(q, snapshot => {
     commentsList.innerHTML = "";
+    const currentUser = auth.currentUser;
+    const uid = currentUser ? currentUser.uid : null;
+
     snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
       const div = document.createElement("div");
       div.className = "comment";
       div.innerHTML = `<span class="username">${data.username || "Anonymous"}:</span>
-                       <span class="text">${data.text}</span>`;
+                       <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>`;
 
-      const isOwner = (data.creator === userId || userId === "cris_owner_001");
+      const isOwner = (data.creator === uid || uid === "cris_owner_001");
       if (isOwner) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.onclick = async () => {
           const newText = prompt("Edit comment:", data.text);
           if (!newText || !newText.trim()) return;
-          await updateDoc(doc(db, "letters", currentModalNote.id, "comments", docSnap.id), { text: newText.trim(), edited: true });
+          await updateDoc(doc(db, "letters", currentModalNote.id, "comments", docSnap.id), { 
+            text: newText.trim(), 
+            edited: true 
+          });
         };
 
         const delBtn = document.createElement("button");
@@ -310,21 +316,25 @@ async function loadComments() {
   });
 }
 
-// ---------------- Add comment ----------------
+// Add new comment
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
 
-  // Make sure we use Firebase UID, not localStorage
   const currentUser = auth.currentUser;
-  if (!currentUser) return alert("You must be logged in to comment.");
+  if (!currentUser) {
+    alert("Login failed — refresh the page and try again.");
+    return;
+  }
+
+  const uid = currentUser.uid;
 
   try {
     const commentsCol = collection(db, "letters", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
       username,
-      creator: currentUser.uid, // <--- FIX HERE
+      creator: uid,
       timestamp: serverTimestamp()
     });
 
@@ -334,10 +344,12 @@ submitComment.onclick = async () => {
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
+
 </script>
 
 </body>
 </html>
+
 
 
 

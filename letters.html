@@ -158,12 +158,34 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
+// Anonymous sign-in
 signInAnonymously(auth).catch(console.error);
 
-// Username & userId
+// Username for display
 let username = localStorage.getItem('username');
-if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+if(!username){
+  username = prompt("Choose a username:") || "Anonymous";
+  localStorage.setItem('username', username);
+}
+
+// Wait for user to be signed in before doing anything
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    console.log("Signed in UID:", user.uid);
+    localStorage.setItem('userId', user.uid); // optional, for local reference
+
+    // Initialize real-time notes after auth
+    const notesCol = collection(db,'notes','letters','memberNotes');
+    onSnapshot(notesCol, snapshot => {
+      const notes = snapshot.docs.map(d => ({id:d.id, creator:d.data().creator, ...d.data()}));
+      renderNotes(notes);
+    });
+
+  } else {
+    console.log("No user signed in yet");
+  }
+});
+
 
 // DOM
 const wall = document.getElementById('letters-wall');
@@ -332,4 +354,5 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 

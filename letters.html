@@ -234,76 +234,80 @@ modalDelete.onclick = async () => {
 };
 
 // ---------- Comments logic only ----------
-let commentsUnsubscribe = null;
-
-// Load comments
 async function loadComments() {
   if (!currentModalNote) return;
-  if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
-  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-  const q = query(commentsCol, orderBy('timestamp', 'asc'));
+  const docRef = doc(db, "letters", currentModalNote.id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return;
 
-  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
-    commentsList.innerHTML = "";
-    snapshot.docs.forEach((docSnap) => {
-      const data = docSnap.data();
-      const div = document.createElement('div');
-      div.className = 'comment';
-      div.innerHTML = `<span class="username">${data.username || "Anonymous"}:</span> <span class="text">${data.text}</span>`;
+  const letterData = docSnap.data();
+  const comments = letterData.comments || [];
 
-      const isOwner = (data.creator === userId || userId === "cris_owner_001");
-      if (isOwner) {
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = async () => {
-          const newText = prompt("Edit comment:", data.text);
-          if (!newText || newText.trim() === "") return;
-          await updateDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id), {
-            text: newText.trim(),
-            edited: true
-          });
-        };
+  comments.forEach((comment, index) => {
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.innerHTML = `<span class="username">${comment.username || "Anonymous"}:</span>
+                     <span class="text">${comment.text}</span>`;
 
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Delete';
-        delBtn.onclick = async () => {
-          if (confirm("Delete comment?")) {
-            await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
-          }
-        };
+    const isOwner = comment.creator === userId || userId === "cris_owner_001";
+    if (isOwner) {
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.onclick = async () => {
+        const newText = prompt("Edit comment:", comment.text);
+        if (!newText || !newText.trim()) return;
+        comments[index].text = newText.trim();
+        comments[index].edited = true;
+        await updateDoc(docRef, { comments });
+        loadComments();
+      };
 
-        div.appendChild(editBtn);
-        div.appendChild(delBtn);
-      }
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.onclick = async () => {
+        if (!confirm("Delete comment?")) return;
+        comments.splice(index, 1);
+        await updateDoc(docRef, { comments });
+        loadComments();
+      };
 
-      commentsList.appendChild(div);
-    });
+      div.appendChild(editBtn);
+      div.appendChild(delBtn);
+    }
+
+    commentsList.appendChild(div);
   });
 }
 
-// Submit comment
+// Add new comment
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
 
+  const docRef = doc(db, "letters", currentModalNote.id);
+  const newComment = {
+    text,
+    username,
+    creator: userId,
+    timestamp: new Date().toISOString(),
+    edited: false
+  };
+
   try {
-    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-    await addDoc(commentsCol, {
-      text,
-      username,
-      creator: userId,
-      timestamp: serverTimestamp()
-    });
+    await updateDoc(docRef, { comments: [...(currentModalNote.comments || []), newComment] });
     commentInput.value = "";
+    loadComments();
   } catch (err) {
     console.error("Failed to send comment:", err);
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
 
+
 </script>
 </body>
 </html>
+
 

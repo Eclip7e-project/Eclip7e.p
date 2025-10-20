@@ -255,9 +255,20 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
-// ---------- Comments logic only (fixed) ----------
+let currentUser = null;
+
+// Wait for Firebase anonymous login
+onAuthStateChanged(auth, user => {
+  if(user){
+    currentUser = user;
+    console.log("Logged in anonymously as:", user.uid);
+  } else {
+    console.error("Anonymous login failed");
+  }
+});
+
 async function loadComments() {
-  if (!currentModalNote) return;
+  if (!currentModalNote || !currentUser) return;
   commentsList.innerHTML = "";
 
   const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
@@ -266,8 +277,6 @@ async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsUnsubscribe = onSnapshot(q, snapshot => {
     commentsList.innerHTML = "";
-    const currentUser = auth.currentUser;
-    const uid = currentUser ? currentUser.uid : null;
 
     snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
@@ -278,7 +287,7 @@ async function loadComments() {
         <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>
       `;
 
-      const isOwner = (data.creator === uid || uid === "cris_owner_001");
+      const isOwner = (data.creator === currentUser.uid || currentUser.uid === "cris_owner_001");
       if (isOwner) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
@@ -310,22 +319,14 @@ async function loadComments() {
 // Add new comment
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote) return;
-
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    alert("Login failed — refresh the page and try again.");
-    return;
-  }
-
-  const uid = currentUser.uid;
+  if (!text || !currentModalNote || !currentUser) return;
 
   try {
     const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
       username,
-      creator: uid,
+      creator: currentUser.uid,
       timestamp: serverTimestamp()
     });
 
@@ -336,35 +337,10 @@ submitComment.onclick = async () => {
   }
 };
 
-
-// Add new comment submit
-  Comment.onclick = async () => {
-    const text = commentInput.value.trim(); 
-    if (!text || !currentModalNote) return;
-    
-    const currentUser = auth.currentUser;
-    if (!currentUser) { alert("Login failed — refresh the page and try again.");
-    return;
-    } 
-    const uid = currentUser.uid;
-    try { 
-    const commentsCol = collection(db, "letters",
-    currentModalNote.id, "comments"); 
-    await addDoc(commentsCol, { 
-    text, 
-    username,
-    creator: uid, 
-    timestamp: serverTimestamp() 
-    }); 
-    commentInput.value = "";
-    } catch (err) {
-    console.error("Failed to send comment:",err); 
-    alert("Failed to send comment — check Firestore permissions."); 
-    } 
-  };
 </script>
 </body>
 </html>
+
 
 
 

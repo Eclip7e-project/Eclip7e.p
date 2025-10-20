@@ -160,10 +160,12 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
+// Username & userId
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
+// DOM
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -178,42 +180,54 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
+// ----------------- Render Notes -----------------
 function renderNotes(notes){
   wall.innerHTML='';
   notes.forEach(n=>{
     const div=document.createElement('div');
     div.className='sticky-note';
+
     const imgEl=document.createElement('img');
     imgEl.src=n.img; imgEl.alt='Note';
+
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent = n.text;
     textDiv.style.color = n.color || 'white';
+
     div.appendChild(imgEl);
     div.appendChild(textDiv);
+
+    // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
+
     wall.appendChild(div);
   });
 }
 
+// ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
+
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'white';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
+
   loadComments();
 }
 
+// ----------------- Close modal -----------------
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
+// ----------------- Likes -----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
@@ -225,6 +239,7 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
+// ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
@@ -232,6 +247,13 @@ modalDelete.onclick = async () => {
   await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
+
+// ----------------- Firestore real-time notes -----------------
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  renderNotes(notes);
+});
 
 // ---------- Comments logic only ----------
 async function loadComments() {
@@ -305,9 +327,6 @@ submitComment.onclick = async () => {
   }
 };
 
-
 </script>
 </body>
 </html>
-
-

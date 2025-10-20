@@ -194,22 +194,20 @@ let currentModalNote = null;
 let commentsUnsubscribe = null;
 
 // ----------------- Render Notes -----------------
-function renderNotes(notes){
-  wall.innerHTML='';
-  notes.forEach(n=>{
-    const div=document.createElement('div');
-    div.className='sticky-note';
+onAuthStateChanged(auth, user => {
+  if (user) {
+    userId = user.uid;
+    console.log("Signed in as:", userId);
 
-    const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    // Only start listening to notes after signed in
+    const notesCol = collection(db,'notes','letters','memberNotes');
+    onSnapshot(notesCol, snapshot=>{
+      const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+      renderNotes(notes);
+    });
+  }
+});
 
-    const textDiv=document.createElement('div');
-    textDiv.className='text';
-    textDiv.textContent = n.text;
-    textDiv.style.color = n.color || 'white';
-
-    div.appendChild(imgEl);
-    div.appendChild(textDiv);
 
     // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
@@ -345,6 +343,7 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

@@ -255,7 +255,7 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
-// ----------------- Simple Comments -----------------
+// ---------------- Simple Comments Section ----------------
 let userId = localStorage.getItem('userId');
 if (!userId) {
   userId = crypto.randomUUID();
@@ -268,6 +268,7 @@ if (!username) {
   localStorage.setItem('username', username);
 }
 
+const ADMIN_ID = "cris_owner_001";
 let commentsUnsubscribe = null;
 
 // Load comments
@@ -286,13 +287,23 @@ async function loadComments() {
       const data = docSnap.data();
       const div = document.createElement("div");
       div.className = "comment";
+
+      // Comment content
       div.innerHTML = `
-        <span class="username">${data.username || "Anonymous"}:</span>
+        <span class="username">${data.username || "Anonymous"}</span>
         <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>
+        <span class="like" style="margin-left:5px; cursor:pointer;">❤ ${data.likes || 0}</span>
       `;
 
-      // Only creator can edit/delete
-      if (data.creator === userId) {
+      // Like button
+      div.querySelector('.like').onclick = async () => {
+        await updateDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id), {
+          likes: (data.likes || 0) + 1
+        });
+      };
+
+      // Edit/Delete for creator or admin
+      if (data.creator === userId || userId === ADMIN_ID) {
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.onclick = async () => {
@@ -331,9 +342,9 @@ submitComment.onclick = async () => {
       text,
       username,
       creator: userId,
+      likes: 0,
       timestamp: serverTimestamp()
     });
-
     commentInput.value = "";
   } catch (err) {
     console.error("Failed to send comment:", err);
@@ -344,6 +355,7 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

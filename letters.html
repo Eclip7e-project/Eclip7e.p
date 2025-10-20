@@ -147,7 +147,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// ----------------- Firebase Config -----------------
+// ---------------- Firebase ----------------
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -160,23 +160,24 @@ initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
 
-// ----------------- User -----------------
+// ---------------- User ----------------
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = null; // will be set by Firebase anonymous login
+let userId = null;
 
+// Wait for Firebase anonymous login before anything else
 signInAnonymously(auth).catch(console.error);
 onAuthStateChanged(auth, user => {
   if(user){
     userId = user.uid;
     console.log("Logged in anonymously as:", userId);
-    initNotes(); // only start rendering notes after login
+    initNotes();
   } else {
     console.error("Anonymous login failed");
   }
 });
 
-// ----------------- DOM -----------------
+// ---------------- DOM ----------------
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -191,7 +192,7 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// ----------------- Initialize Notes -----------------
+// ---------------- Render Notes ----------------
 function initNotes() {
   const notesCol = collection(db,'notes','letters','memberNotes');
   onSnapshot(notesCol, snapshot=>{
@@ -200,7 +201,6 @@ function initNotes() {
   });
 }
 
-// ----------------- Render Notes -----------------
 function renderNotes(notes){
   wall.innerHTML='';
   notes.forEach(n=>{
@@ -217,13 +217,13 @@ function renderNotes(notes){
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-
     div.addEventListener('click', ()=> openModal(n));
+
     wall.appendChild(div);
   });
 }
 
-// ----------------- Open Modal -----------------
+// ---------------- Modal ----------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
@@ -240,12 +240,12 @@ async function openModal(note){
   loadComments();
 }
 
-// ----------------- Close Modal -----------------
+// ---------------- Close modal ----------------
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// ----------------- Likes -----------------
+// ---------------- Likes ----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
@@ -257,7 +257,7 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// ----------------- Delete Note -----------------
+// ---------------- Delete note ----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
@@ -266,7 +266,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// ----------------- Comments -----------------
+// ---------------- Comments ----------------
 async function loadComments() {
   if (!currentModalNote) return;
   commentsList.innerHTML = "";
@@ -310,7 +310,7 @@ async function loadComments() {
   });
 }
 
-// ----------------- Add Comment -----------------
+// ---------------- Add comment ----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote || !userId) return; // wait for auth
@@ -333,5 +333,6 @@ submitComment.onclick = async () => {
 
 </body>
 </html>
+
 
 

@@ -144,9 +144,10 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// ----------------- Firebase Config -----------------
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -158,14 +159,24 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
-signInAnonymously(auth).catch(console.error);
 
-// Username & userId
+// ----------------- User -----------------
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+let userId = null; // will be set by Firebase anonymous login
 
-// DOM
+signInAnonymously(auth).catch(console.error);
+onAuthStateChanged(auth, user => {
+  if(user){
+    userId = user.uid;
+    console.log("Logged in anonymously as:", userId);
+    initNotes(); // only start rendering notes after login
+  } else {
+    console.error("Anonymous login failed");
+  }
+});
+
+// ----------------- DOM -----------------
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -179,6 +190,15 @@ const submitComment = document.getElementById('submit-comment');
 
 let currentModalNote = null;
 let commentsUnsubscribe = null;
+
+// ----------------- Initialize Notes -----------------
+function initNotes() {
+  const notesCol = collection(db,'notes','letters','memberNotes');
+  onSnapshot(notesCol, snapshot=>{
+    const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+    renderNotes(notes);
+  });
+}
 
 // ----------------- Render Notes -----------------
 function renderNotes(notes){
@@ -198,14 +218,12 @@ function renderNotes(notes){
     div.appendChild(imgEl);
     div.appendChild(textDiv);
 
-    // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
-
     wall.appendChild(div);
   });
 }
 
-// ----------------- Modal -----------------
+// ----------------- Open Modal -----------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
@@ -222,7 +240,7 @@ async function openModal(note){
   loadComments();
 }
 
-// ----------------- Close modal -----------------
+// ----------------- Close Modal -----------------
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
@@ -239,7 +257,7 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// ----------------- Delete note -----------------
+// ----------------- Delete Note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
@@ -248,14 +266,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-  renderNotes(notes);
-});
-
-// ---------- Comments logic only ----------
+// ----------------- Comments -----------------
 async function loadComments() {
   if (!currentModalNote) return;
   commentsList.innerHTML = "";
@@ -299,14 +310,12 @@ async function loadComments() {
   });
 }
 
-
-// Add new comment
+// ----------------- Add Comment -----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote) return;
+  if (!text || !currentModalNote || !userId) return; // wait for auth
 
   try {
-    // NEW: use subcollection "comments"
     const commentsCol = collection(db, "letters", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
@@ -314,15 +323,15 @@ submitComment.onclick = async () => {
       creator: userId,
       timestamp: serverTimestamp()
     });
-
     commentInput.value = "";
   } catch (err) {
     console.error("Failed to send comment:", err);
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
-
 </script>
+
 </body>
 </html>
+
 

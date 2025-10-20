@@ -145,7 +145,7 @@ footer a:hover { text-decoration:underline; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
@@ -158,6 +158,7 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
+
 // Anonymous sign-in
 signInAnonymously(auth).catch(console.error);
 
@@ -167,25 +168,6 @@ if(!username){
   username = prompt("Choose a username:") || "Anonymous";
   localStorage.setItem('username', username);
 }
-
-// Wait for user to be signed in before doing anything
-onAuthStateChanged(auth, (user) => {
-  if(user){
-    console.log("Signed in UID:", user.uid);
-    localStorage.setItem('userId', user.uid); // optional, for local reference
-
-    // Initialize real-time notes after auth
-    const notesCol = collection(db,'notes','letters','memberNotes');
-    onSnapshot(notesCol, snapshot => {
-      const notes = snapshot.docs.map(d => ({id:d.id, creator:d.data().creator, ...d.data()}));
-      renderNotes(notes);
-    });
-
-  } else {
-    console.log("No user signed in yet");
-  }
-});
-
 
 // DOM
 const wall = document.getElementById('letters-wall');
@@ -204,23 +186,22 @@ let commentsUnsubscribe = null;
 
 // ----------------- Render Notes -----------------
 function renderNotes(notes){
-  wall.innerHTML='';
+  wall.innerHTML = '';
   notes.forEach(n=>{
-    const div=document.createElement('div');
-    div.className='sticky-note';
+    const div = document.createElement('div');
+    div.className = 'sticky-note';
 
-    const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    const imgEl = document.createElement('img');
+    imgEl.src = n.img; imgEl.alt='Note';
 
-    const textDiv=document.createElement('div');
-    textDiv.className='text';
+    const textDiv = document.createElement('div');
+    textDiv.className = 'text';
     textDiv.textContent = n.text;
     textDiv.style.color = n.color || 'white';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
 
-    // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
 
     wall.appendChild(div);
@@ -238,7 +219,9 @@ async function openModal(note){
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'white';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-  modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
+
+  const user = auth.currentUser;
+  modalDelete.style.display = (user && (currentModalNote.creator === user.uid || user.uid === "cris_owner_001")) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
 
   loadComments();
@@ -252,9 +235,14 @@ document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 // ----------------- Likes -----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
+  const user = auth.currentUser;
+  if(!user){ alert("Not signed in!"); return; }
+
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
   if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
+
+  const noteRef = doc(db,'notes','letters','memberNotes',currentModalNote.id);
+  await updateDoc(noteRef,{ likes:(currentModalNote.likes||0)+1 });
   currentModalNote.likes = (currentModalNote.likes||0)+1;
   modalLike.textContent = `❤ ${currentModalNote.likes}`;
   liked.push(currentModalNote.id);
@@ -265,20 +253,31 @@ modalLike.onclick = async () => {
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
-  if(currentModalNote.creator !== userId && userId !== "cris_owner_001"){ alert("No permission"); return; }
+  const user = auth.currentUser;
+  if(!user || (currentModalNote.creator !== user.uid && user.uid !== "cris_owner_001")) { alert("No permission"); return; }
   await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-  renderNotes(notes);
+// ----------------- Auth & Real-time Notes -----------------
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    console.log("Signed in UID:", user.uid);
+
+    const notesCol = collection(db,'notes','letters','memberNotes');
+    onSnapshot(notesCol, snapshot => {
+      const notes = snapshot.docs.map(d => ({id:d.id, creator:d.data().creator, ...d.data()}));
+      renderNotes(notes);
+    });
+
+  } else {
+    console.log("No user signed in yet");
+  }
 });
 
 // ---------------- Comments ----------------
 async function loadComments() {
+  if (!currentModalNote) return;
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
 
@@ -300,7 +299,7 @@ async function loadComments() {
         editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
-          if (!newText || newText.trim() === "") return;
+          if (!newText || !newText.trim()) return;
           await updateDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id), {
             text: newText.trim(),
             edited: true
@@ -330,29 +329,23 @@ async function loadComments() {
 // ---------------- Submit Comment ----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote) return;
+  const user = auth.currentUser;
+  if (!text || !currentModalNote || !user) { alert("Not signed in!"); return; }
 
-  try {
-    const user = auth.currentUser;
-    if (!user) { alert("Not signed in!"); return; }
+  const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
+  await addDoc(commentsCol, {
+    text,
+    username,
+    creator: user.uid,
+    timestamp: serverTimestamp()
+  });
 
-    const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-    await addDoc(commentsCol, {
-      text,
-      username,
-      creator: user.uid,
-      timestamp: new Date()
-    });
-
-    commentInput.value = '';
-  } catch (err) {
-    console.error("Failed to submit comment:", err);
-    alert("Failed to submit comment: " + err.message);
-  }
+  commentInput.value = '';
 };
-
 </script>
+
 </body>
 </html>
+
 
 

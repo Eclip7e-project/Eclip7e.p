@@ -158,7 +158,20 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
+
+  // ------------------- ANONYMOUS SIGN-IN -------------------
+let userId = null; // will store signed-in UID
+
 signInAnonymously(auth).catch(console.error);
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    userId = user.uid;
+    console.log("Signed in as:", userId);
+  } else {
+    console.log("Not signed in!");
+  }
+});
 
 // Username & userId
 let username = localStorage.getItem('username');
@@ -332,5 +345,6 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 

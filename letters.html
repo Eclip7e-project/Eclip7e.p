@@ -144,10 +144,9 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// ---------------- Firebase ----------------
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -159,25 +158,14 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 const auth = getAuth();
+signInAnonymously(auth).catch(console.error);
 
-// ---------------- User ----------------
+// Username & userId
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = null;
+let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
-// Wait for Firebase anonymous login before anything else
-signInAnonymously(auth).catch(console.error);
-onAuthStateChanged(auth, user => {
-  if(user){
-    userId = user.uid;
-    console.log("Logged in anonymously as:", userId);
-    initNotes();
-  } else {
-    console.error("Anonymous login failed");
-  }
-});
-
-// ---------------- DOM ----------------
+// DOM
 const wall = document.getElementById('letters-wall');
 const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
@@ -192,15 +180,7 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// ---------------- Render Notes ----------------
-function initNotes() {
-  const notesCol = collection(db,'notes','letters','memberNotes');
-  onSnapshot(notesCol, snapshot=>{
-    const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-    renderNotes(notes);
-  });
-}
-
+// ----------------- Render Notes -----------------
 function renderNotes(notes){
   wall.innerHTML='';
   notes.forEach(n=>{
@@ -217,13 +197,15 @@ function renderNotes(notes){
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
+
+    // Original working modal open
     div.addEventListener('click', ()=> openModal(n));
 
     wall.appendChild(div);
   });
 }
 
-// ---------------- Modal ----------------
+// ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','letters','memberNotes',note.id);
@@ -240,12 +222,12 @@ async function openModal(note){
   loadComments();
 }
 
-// ---------------- Close modal ----------------
+// ----------------- Close modal -----------------
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-// ---------------- Likes ----------------
+// ----------------- Likes -----------------
 modalLike.onclick = async () => {
   if(!currentModalNote) return;
   let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
@@ -257,7 +239,7 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// ---------------- Delete note ----------------
+// ----------------- Delete note -----------------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
   if(!confirm("Delete your note?")) return;
@@ -266,12 +248,19 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// ---------- Comments logic only ----------
+// ----------------- Firestore real-time notes -----------------
+const notesCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(notesCol, snapshot=>{
+  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+  renderNotes(notes);
+});
+
+// ---------- Comments logic only (fixed) ----------
 async function loadComments() {
   if (!currentModalNote) return;
   commentsList.innerHTML = "";
 
-  const commentsCol = collection(db, "letters", currentModalNote.id, "comments");
+  const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
   if (commentsUnsubscribe) commentsUnsubscribe();
@@ -284,8 +273,10 @@ async function loadComments() {
       const data = docSnap.data();
       const div = document.createElement("div");
       div.className = "comment";
-      div.innerHTML = `<span class="username">${data.username || "Anonymous"}:</span>
-                       <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>`;
+      div.innerHTML = `
+        <span class="username">${data.username || "Anonymous"}:</span>
+        <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>
+      `;
 
       const isOwner = (data.creator === uid || uid === "cris_owner_001");
       if (isOwner) {
@@ -294,17 +285,17 @@ async function loadComments() {
         editBtn.onclick = async () => {
           const newText = prompt("Edit comment:", data.text);
           if (!newText || !newText.trim()) return;
-          await updateDoc(doc(db, "letters", currentModalNote.id, "comments", docSnap.id), { 
-            text: newText.trim(), 
-            edited: true 
-          });
+          await updateDoc(
+            doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id),
+            { text: newText.trim(), edited: true }
+          );
         };
 
         const delBtn = document.createElement("button");
         delBtn.textContent = "Delete";
         delBtn.onclick = async () => {
           if (!confirm("Delete comment?")) return;
-          await deleteDoc(doc(db, "letters", currentModalNote.id, "comments", docSnap.id));
+          await deleteDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id));
         };
 
         div.appendChild(editBtn);
@@ -330,7 +321,7 @@ submitComment.onclick = async () => {
   const uid = currentUser.uid;
 
   try {
-    const commentsCol = collection(db, "letters", currentModalNote.id, "comments");
+    const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
       username,
@@ -345,10 +336,36 @@ submitComment.onclick = async () => {
   }
 };
 
-</script>
 
+// Add new comment submit
+  Comment.onclick = async () => {
+    const text = commentInput.value.trim(); 
+    if (!text || !currentModalNote) return;
+    
+    const currentUser = auth.currentUser;
+    if (!currentUser) { alert("Login failed — refresh the page and try again.");
+    return;
+    } 
+    const uid = currentUser.uid;
+    try { 
+    const commentsCol = collection(db, "letters",
+    currentModalNote.id, "comments"); 
+    await addDoc(commentsCol, { 
+    text, 
+    username,
+    creator: uid, 
+    timestamp: serverTimestamp() 
+    }); 
+    commentInput.value = "";
+    } catch (err) {
+    console.error("Failed to send comment:",err); 
+    alert("Failed to send comment — check Firestore permissions."); 
+    } 
+  };
+</script>
 </body>
 </html>
+
 
 
 

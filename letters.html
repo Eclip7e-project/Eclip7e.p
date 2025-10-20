@@ -313,16 +313,21 @@ async function loadComments() {
 // ---------------- Add comment ----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentModalNote || !userId) return; // wait for auth
+  if (!text || !currentModalNote) return;
+
+  // Make sure we use Firebase UID, not localStorage
+  const currentUser = auth.currentUser;
+  if (!currentUser) return alert("You must be logged in to comment.");
 
   try {
     const commentsCol = collection(db, "letters", currentModalNote.id, "comments");
     await addDoc(commentsCol, {
       text,
       username,
-      creator: userId,
+      creator: currentUser.uid, // <--- FIX HERE
       timestamp: serverTimestamp()
     });
+
     commentInput.value = "";
   } catch (err) {
     console.error("Failed to send comment:", err);
@@ -333,6 +338,7 @@ submitComment.onclick = async () => {
 
 </body>
 </html>
+
 
 
 

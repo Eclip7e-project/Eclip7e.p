@@ -255,7 +255,7 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
-// ----------------- Comments -----------------
+// ---------------- Comments ----------------
 async function loadComments() {
   if (commentsUnsubscribe) commentsUnsubscribe();
   commentsList.innerHTML = "";
@@ -263,76 +263,73 @@ async function loadComments() {
   const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
-  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+  commentsUnsubscribe = onSnapshot(q, snapshot => {
     commentsList.innerHTML = "";
-    snapshot.forEach((docSnap) => {
+    snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className = 'comment';
-      div.innerHTML = `
-        <span class="username">${data.username || "Anonymous"}:</span>
-        <span class="text">${data.text}</span>
-      `;
+      div.innerHTML = `<span class="username">${data.username || "Anonymous"}:</span><span class="text">${data.text}</span>`;
 
-      const isOwner = (userId === "cris_owner_001"); 
-      const isCreator = (data.creator === userId);
+      const user = auth.currentUser;
 
-      if (isOwner || isCreator) {
-        const btnWrap = document.createElement('div');
-        btnWrap.style.display = "flex";
-        btnWrap.style.gap = "4px";
-        btnWrap.style.marginTop = "4px";
-
+      if (user && (data.creator === user.uid || user.uid === "cris_owner_001")) {
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
           if (!newText || newText.trim() === "") return;
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
-          await updateDoc(
-            doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+          await updateDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id), {
+            text: newText.trim(),
+            edited: true
+          });
         };
 
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (!isOwner && !isCreator) { alert("No permission"); return; }
           if (confirm('Delete this comment?')) {
             await deleteDoc(doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments', docSnap.id));
           }
         };
 
-        btnWrap.appendChild(editBtn);
-        btnWrap.appendChild(delBtn);
-        div.appendChild(btnWrap);
+        div.appendChild(editBtn);
+        div.appendChild(delBtn);
       }
 
       commentsList.appendChild(div);
     });
+
+    // Scroll to bottom
+    commentsList.scrollTop = commentsList.scrollHeight;
   });
 }
 
-// ----------------- Submit Comment -----------------
+// ---------------- Submit Comment ----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
 
   try {
+    const user = auth.currentUser;
+    if (!user) { alert("Not signed in!"); return; }
+
     const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
     await addDoc(commentsCol, {
       text,
       username,
-      creator: userId,
-      timestamp: serverTimestamp()
+      creator: user.uid,
+      timestamp: new Date()
     });
-    commentInput.value = "";
+
+    commentInput.value = '';
   } catch (err) {
-    console.error("Error adding comment:", err);
-    alert("Failed to send comment — check Firestore permissions.");
+    console.error("Failed to submit comment:", err);
+    alert("Failed to submit comment: " + err.message);
   }
 };
+
 </script>
 </body>
 </html>
+

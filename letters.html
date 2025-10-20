@@ -176,7 +176,24 @@ onAuthStateChanged(auth, user => {
 // Username & userId
 let username = localStorage.getItem('username');
 if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+let userId = null;
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    userId = user.uid;
+    console.log("Signed in as:", userId);
+
+    // Start listening to notes AFTER signed in
+    const notesCol = collection(db,'notes','letters','memberNotes');
+    onSnapshot(notesCol, snapshot=>{
+      const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
+      renderNotes(notes);
+    });
+  } else {
+    console.log("Not signed in!");
+  }
+});
+
 
 // DOM
 const wall = document.getElementById('letters-wall');
@@ -343,6 +360,7 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

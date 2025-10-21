@@ -677,13 +677,13 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-modalSubmit.addEventListener('click', async ()=>{
+modalSubmit.addEventListener('click', async () => {
   const text = noteText.value.trim();
-  if(!text){ alert('Write something!'); return; }
+  if (!text) { alert('Write something!'); return; }
 
   const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
-  const member = currentMode==='simple'?memberSelect.value:currentMember;
+  const member = currentMode === 'simple' ? memberSelect.value : currentMember;
 
   const noteData = {
     img: currentImg,
@@ -695,15 +695,23 @@ modalSubmit.addEventListener('click', async ()=>{
     creator: userId
   };
 
-  try{
-    await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
+  // ✅ Handle optional name for letters
+  if (member === 'letters') {
+    const anon = document.querySelector('#letter-anon').checked;
+    const nameInput = document.querySelector('#letter-name').value.trim();
+    noteData.displayName = (!anon && nameInput) ? nameInput : null;
+  }
+
+  try {
+    await addDoc(collection(db, 'notes', member, 'memberNotes'), noteData);
     closeModal();
     alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
-  }catch(err){
-    console.error(err);
-    alert('Error submitting note.');
+  } catch (err) {
+    console.error('Firestore error:', err);
+    alert('Error submitting note. Check console for details.');
   }
 });
+
 
 const charCount = $('#char-count');
 
@@ -731,4 +739,5 @@ renderLettersSection();
 
 </body>
 </html> 
+
 

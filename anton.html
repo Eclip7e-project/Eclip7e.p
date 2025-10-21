@@ -17,7 +17,7 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
 .sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
-.sticky-note .text { position:absolute; top:10px; left:10px; right:10px; color:black; font-size:0.75rem; white-space:pre-wrap; overflow-wrap:break-word; }
+.sticky-note .text { position:absolute; color:black; font-size:0.75rem; white-space:pre-wrap; overflow-wrap:break-word; }
 
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
@@ -90,6 +90,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// Firebase
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -103,20 +104,17 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
+// User info
 let username = localStorage.getItem('username') || prompt("Choose a username:") || "Anonymous";
 localStorage.setItem('username', username);
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
 
+// Admin UID
+const ADMIN_UID = "cris_owner_001";
+
 const wall = document.getElementById('anton-wall');
 const modal = document.getElementById('modal');
 const modalImageContainer = document.getElementById('modal-image-container');
-const modalLike = document.createElement('button');
-modalLike.id='modal-like';
-const modalDelete = document.createElement('button');
-modalDelete.id='modal-delete';
-modalLike.textContent='❤ 0';
-modalDelete.textContent='Delete';
-
 const modalClose = document.getElementById('modal-close');
 const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
@@ -125,6 +123,7 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
+// Render wall notes
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -137,28 +136,30 @@ function renderNotes(notes){
     if(n.id===topNoteId) div.classList.add('top-note');
     const imgEl = document.createElement('img'); imgEl.src=n.img; imgEl.alt='Note';
     const textDiv = document.createElement('div'); textDiv.className='text'; textDiv.textContent=n.text; textDiv.style.color=n.color||'black';
+    if(n.position) Object.assign(textDiv.style, n.position);
+    else { textDiv.style.top='10px'; textDiv.style.left='10px'; textDiv.style.right='10px'; }
     div.appendChild(imgEl); div.appendChild(textDiv);
     div.onclick = ()=>openModal(n);
     wall.appendChild(div);
   });
 }
 
+// Open modal
 async function openModal(note){
   currentModalNote = note;
   const docRef = doc(db,'notes','anton','memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
+  // Clear modal
   modalImageContainer.innerHTML='';
-  modalImageContainer.appendChild(modalLike);
-  modalImageContainer.appendChild(modalDelete);
 
-  // Create note in modal
+  // Create note div
   const noteDiv = document.createElement('div');
   noteDiv.className='sticky-note';
   noteDiv.style.width='80%';
-  noteDiv.style.height='auto';
   noteDiv.style.position='relative';
+  noteDiv.style.marginBottom='10px';
 
   const imgEl = document.createElement('img');
   imgEl.src=currentModalNote.img;
@@ -170,45 +171,51 @@ async function openModal(note){
   const textDiv = document.createElement('div');
   textDiv.className='text';
   textDiv.textContent=currentModalNote.text;
-  textDiv.style.color=currentModalNote.color||'black';
+  textDiv.style.color=currentModalNote.color || 'black';
   textDiv.style.position='absolute';
   textDiv.style.whiteSpace='pre-wrap';
   textDiv.style.pointerEvents='none';
-
   if(currentModalNote.position) Object.assign(textDiv.style, currentModalNote.position);
   else { textDiv.style.top='10px'; textDiv.style.left='10px'; textDiv.style.right='10px'; }
-
   noteDiv.appendChild(textDiv);
-  modalImageContainer.insertBefore(noteDiv, modalLike);
 
-  modalLike.textContent=`❤ ${currentModalNote.likes||0}`;
-  modalDelete.style.display=(currentModalNote.creator===userId) ? 'inline-block' : 'none';
+  modalImageContainer.appendChild(noteDiv);
+
+  // Buttons
+  const modalLike = document.createElement('button');
+  modalLike.id='modal-like';
+  modalLike.textContent = `❤ ${currentModalNote.likes||0}`;
+  modalLike.onclick = async () => {
+    let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
+    if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
+    await updateDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id), { likes:(currentModalNote.likes||0)+1 });
+    currentModalNote.likes++;
+    modalLike.textContent = `❤ ${currentModalNote.likes}`;
+    liked.push(currentModalNote.id); localStorage.setItem('likedNotes', JSON.stringify(liked));
+  };
+  modalImageContainer.appendChild(modalLike);
+
+  const modalDelete = document.createElement('button');
+  modalDelete.id='modal-delete';
+  modalDelete.textContent = 'Delete';
+  modalDelete.style.display = (currentModalNote.creator===userId || userId===ADMIN_UID) ? 'inline-block' : 'none';
+  modalDelete.onclick = async () => {
+    if(!confirm("Delete this note?")) return;
+    await deleteDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id));
+    modal.style.display='none';
+  };
+  modalImageContainer.appendChild(modalDelete);
 
   modal.style.display='flex';
   loadComments();
 }
 
+// Close modal
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
-modalLike.onclick = async () => {
-  if(!currentModalNote) return;
-  let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
-  if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id), { likes:(currentModalNote.likes||0)+1 });
-  currentModalNote.likes = (currentModalNote.likes||0)+1;
-  modalLike.textContent = `❤ ${currentModalNote.likes}`;
-  liked.push(currentModalNote.id); localStorage.setItem('likedNotes', JSON.stringify(liked));
-};
-
-modalDelete.onclick = async ()=>{
-  if(!currentModalNote) return;
-  if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id));
-  modal.style.display='none';
-};
-
+// Load comments
 function loadComments(){
   if(!currentModalNote) return;
   if(commentsUnsubscribe) commentsUnsubscribe();
@@ -221,7 +228,7 @@ function loadComments(){
       const data = docSnap.data();
       const div = document.createElement('div'); div.className='comment';
       div.innerHTML=`<span class="username">${data.username||"Anonymous"}:</span><span class="text">${data.text}</span>`;
-      const isOwner = data.creator===userId;
+      const isOwner = (data.creator===userId || userId===ADMIN_UID);
       if(isOwner){
         const btnWrap=document.createElement('div'); btnWrap.style.display='flex'; btnWrap.style.gap='4px'; btnWrap.style.marginTop='4px';
         const editBtn = document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=async ()=>{
@@ -238,6 +245,7 @@ function loadComments(){
   });
 }
 
+// Submit comment
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text || !currentModalNote) return;
@@ -246,6 +254,7 @@ submitComment.onclick = async ()=>{
   commentInput.value='';
 };
 
+// Firestore realtime
 const notesCol = collection(db,'notes','anton','memberNotes');
 onSnapshot(notesCol, snapshot=>{
   const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));

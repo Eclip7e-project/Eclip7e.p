@@ -301,7 +301,7 @@ submitComment.onclick = async () => {
   await addDoc(commentsCol, {
   text,
   username,
-  creator: auth.currentUser.uid, // use Firebase Auth UID instead of localStorage
+  creator: userId,
   timestamp: serverTimestamp()
 });
 commentInput.value = "";
@@ -341,6 +341,7 @@ modalDelete.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

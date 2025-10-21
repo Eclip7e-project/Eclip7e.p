@@ -113,6 +113,22 @@ section.wall {
   padding:20px;
   justify-content:center;
 }
+
+/* On mobile: stack note above comments */
+@media (max-width: 768px) {
+  #modal-content {
+    flex-direction: column;
+  }
+  #modal-comments {
+    max-height: none;
+    width: 100%;
+  }
+  #modal-image-container {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 #modal-close {
   position:absolute;
   top:10px;
@@ -464,3 +480,4 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
+

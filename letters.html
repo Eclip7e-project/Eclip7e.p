@@ -255,75 +255,60 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
-// ---------------- Simple Comments Section ----------------
-let userId = localStorage.getItem('userId');
-if (!userId) {
-  userId = crypto.randomUUID();
-  localStorage.setItem('userId', userId);
-}
-
-let username = localStorage.getItem('username');
-if (!username) {
-  username = prompt("Choose a username:") || "Anonymous";
-  localStorage.setItem('username', username);
-}
-
-const ADMIN_ID = "cris_owner_001";
+// ----------------- Comments -----------------
 let commentsUnsubscribe = null;
 
-// Load comments
 async function loadComments() {
   if (!currentModalNote) return;
+  if (commentsUnsubscribe) commentsUnsubscribe(); // unsubscribe previous listener
   commentsList.innerHTML = "";
 
-  const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
+  // Correct path: letters -> letterDocId -> comments
+  const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
-  if (commentsUnsubscribe) commentsUnsubscribe();
-  commentsUnsubscribe = onSnapshot(q, snapshot => {
+  commentsUnsubscribe = onSnapshot(q, (snapshot) => {
     commentsList.innerHTML = "";
-
-    snapshot.docs.forEach(docSnap => {
+    snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const div = document.createElement("div");
-      div.className = "comment";
-
-      // Comment content
+      const div = document.createElement('div');
+      div.className = 'comment';
       div.innerHTML = `
-        <span class="username">${data.username || "Anonymous"}</span>
-        <span class="text">${data.text}${data.edited ? " (edited)" : ""}</span>
-        <span class="like" style="margin-left:5px; cursor:pointer;">❤ ${data.likes || 0}</span>
+        <span class="username">${data.username || "Anonymous"}:</span>
+        <span class="text">${data.text}</span>
       `;
 
-      // Like button
-      div.querySelector('.like').onclick = async () => {
-        await updateDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id), {
-          likes: (data.likes || 0) + 1
-        });
-      };
+      const isOwner = (userId === "cris_owner_001"); 
+      const isCreator = (data.creator === userId);
 
-      // Edit/Delete for creator or admin
-      if (data.creator === userId || userId === ADMIN_ID) {
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
+      if (isOwner || isCreator) {
+        const btnWrap = document.createElement('div');
+        btnWrap.style.display = "flex";
+        btnWrap.style.gap = "4px";
+        btnWrap.style.marginTop = "4px";
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
-          const newText = prompt("Edit comment:", data.text);
-          if (!newText || !newText.trim()) return;
-          await updateDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id), {
-            text: newText.trim(),
-            edited: true
-          });
+          const newText = prompt('Edit your comment:', data.text);
+          if (!newText || newText.trim() === "") return;
+          await updateDoc(
+            doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id),
+            { text: newText.trim(), edited: true }
+          );
         };
 
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (!confirm("Delete comment?")) return;
-          await deleteDoc(doc(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments", docSnap.id));
+          if (confirm('Delete this comment?')) {
+            await deleteDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id));
+          }
         };
 
-        div.appendChild(editBtn);
-        div.appendChild(delBtn);
+        btnWrap.appendChild(editBtn);
+        btnWrap.appendChild(delBtn);
+        div.appendChild(btnWrap);
       }
 
       commentsList.appendChild(div);
@@ -331,23 +316,22 @@ async function loadComments() {
   });
 }
 
-// Submit comment
+// ----------------- Submit Comment -----------------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
 
   try {
-    const commentsCol = collection(db, "notes", "letters", "memberNotes", currentModalNote.id, "comments");
+    const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
     await addDoc(commentsCol, {
       text,
       username,
       creator: userId,
-      likes: 0,
       timestamp: serverTimestamp()
     });
     commentInput.value = "";
   } catch (err) {
-    console.error("Failed to send comment:", err);
+    console.error("Error adding comment:", err);
     alert("Failed to send comment — check Firestore permissions.");
   }
 };
@@ -355,6 +339,7 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

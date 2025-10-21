@@ -206,10 +206,9 @@ function renderNotes(notes){
 // ----------------- Modal -----------------
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','letters','memberNotes',note.id);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
-
+  const docRef = doc(db,'letters',note.id);
+const docSnap = await getDoc(docRef);
+if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
   modalText.style.color = currentModalNote.color || 'white';
@@ -246,10 +245,11 @@ modalDelete.onclick = async () => {
 };
 
 // ----------------- Firestore real-time notes -----------------
-const notesCol = collection(db,'notes','letters','memberNotes');
-onSnapshot(notesCol, snapshot=>{
-  const notes=snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
-  renderNotes(notes);
+// For listing letters
+const lettersCol = collection(db,'letters');
+onSnapshot(lettersCol, snapshot=>{
+  const letters = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+  renderNotes(letters);
 });
 
 // ----------------- Comments -----------------
@@ -336,3 +336,4 @@ submitComment.onclick = async () => {
 </script>
 </body>
 </html>
+

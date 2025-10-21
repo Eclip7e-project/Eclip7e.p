@@ -26,44 +26,38 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; display:flex; flex-direction:column; }
-.sticky-note img { width:100%; height:200px; object-fit:cover; display:block; }
-.note-text { padding:5px; font-size:0.8rem; white-space:pre-wrap; word-wrap:break-word; }
-
-/* COMMENTS */
-.comment-list {
-  display:flex;
-  flex-direction:column;
-  gap:5px;
-  margin-top:5px;
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
+.sticky-note .text {
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  color:black;
+  font-size:0.75rem;
+  white-space:pre-wrap;
+  overflow-wrap:break-word;
 }
-.comment-item { display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); border-radius:5px; padding:2px 5px; font-size:0.65rem; }
-.comment-delete { cursor:pointer; color:red; margin-left:5px; display:none; }
 
 /* Highlight top note */
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
 #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
-#modal-content { position:relative; background:transparent; border-radius:15px; max-width:500px; width:90%; max-height:90%; overflow:auto; }
-#modal-img { width:100%; border-radius:15px; display:block; }
-#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:1rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
-#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
-#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
-#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-content { position:relative; background:transparent; border-radius:15px; display:flex; flex-direction:column; align-items:center; gap:5px; }
+#modal-image-container { position:relative; width:200px; height:200px; }
+#modal-img { width:200px; height:200px; object-fit:cover; border-radius:15px; }
+#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:0.7rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 2px white; }
+#modal-buttons { display:flex; justify-content:center; gap:5px; }
+#modal-like { padding:3px 6px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:3px 6px; cursor:pointer; }
 #modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
 /* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
-
-/* DESKTOP: comments beside note */
-@media(min-width:768px){
-  .sticky-note { flex-direction:row; }
-  .note-text { flex:1; }
-  .comment-list { margin-top:0; margin-left:5px; flex-shrink:0; }
-}
 </style>
 </head>
 <body>
@@ -83,7 +77,7 @@ footer a:hover { text-decoration:underline; }
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
-    <div style="position:relative;">
+    <div id="modal-image-container">
       <img id="modal-img" src="">
       <div id="modal-text"></div>
     </div>
@@ -169,7 +163,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// Render notes with proper text color and comments
+// Render notes
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -193,40 +187,16 @@ function renderNotes(notes){
     imgEl.src=n.img; imgEl.alt='Note';
 
     const textDiv=document.createElement('div');
-    textDiv.className='note-text';
-    textDiv.textContent = n.text;
-    textDiv.style.color = n.color || 'black';
-
-    // Comment list
-    const commentList=document.createElement('div');
-    commentList.className='comment-list';
-    if(n.comments) n.comments.forEach(c=>{
-      const item=document.createElement('div');
-      item.className='comment-item';
-      item.textContent = c.text;
-
-      const del=document.createElement('span');
-      del.className='comment-delete';
-      del.textContent='✖';
-      if(c.creator===userId) del.style.display='inline-block';
-      del.onclick=async e=>{
-        e.stopPropagation();
-        if(confirm('Delete comment?')){
-          const updatedComments = n.comments.filter(x=>x!==c);
-          await updateDoc(doc(db,'notes',memberName,'memberNotes',n.id), { comments: updatedComments });
-        }
-      };
-      item.appendChild(del);
-      commentList.appendChild(item);
-    });
+    textDiv.className='text';
+    textDiv.textContent=n.text;
+    textDiv.style.color=n.color||'black';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-    div.appendChild(commentList);
 
     div.onclick = ()=>openModal(n);
 
-    // Right-click download
+    // Right-click download with rounded corners
     div.addEventListener('contextmenu', async e=>{
       e.preventDefault();
       const canvas = await html2canvas(div, { backgroundColor:null, useCORS:true });
@@ -271,3 +241,4 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
+

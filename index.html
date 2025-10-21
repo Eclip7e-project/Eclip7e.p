@@ -29,18 +29,7 @@
   font-weight: bold;
 }
 
-.letter-text {
-  position: absolute;
-  top: 2.3cm;
-  left: 4.6cm;
-  right: 4.3cm;
-  color: black;
-  font-size: 0.5rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  text-align: left;
-}
+
      
      :root {
   --gold: #d4af37;
@@ -329,11 +318,11 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <input id="color-picker" type="color" value="#000000">
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
         <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
-        <!-- Add under the textarea -->
-<div id="letter-name-section" style="margin-top:10px; display:none;">
-  <input type="checkbox" id="display-name-checkbox">
-  <label for="display-name-checkbox">Display my name under this letter</label>
-  <input type="text" id="display-name" placeholder="Enter your name" style="display:none;width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1px solid #ccc;">
+        <!-- Inside modal-right -->
+<div id="letter-name-container" style="display:none; margin-top:8px;">
+  <label for="letter-name">Your Name (optional)</label>
+  <input type="text" id="letter-name" placeholder="Enter your name" style="width:100%;padding:6px;border-radius:6px;border:1px solid #ccc;">
+  <label><input type="checkbox" id="letter-anon" checked> Stay anonymous</label>
 </div>
         <div class="modal-actions">
           <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
@@ -416,44 +405,30 @@ function setupModal() {
   previewText.textContent = '';
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
-  
-  if(currentMode === 'simple'){
-    modalMemberTitle.textContent = 'Plain Note';
-    memberSelect.style.display = 'block';
-    memberSelectLabel.style.display = 'block';
-    memberSelect.value = currentMember || 'shotaro';
-  } else {
-    modalMemberTitle.textContent = currentMember.toUpperCase();
-    memberSelect.style.display = 'none';
-    memberSelectLabel.style.display = 'none';
-  }
+
+ if(currentMode === 'simple'){
+  modalMemberTitle.textContent = 'Plain Note';
+  memberSelect.style.display = 'block';
+  memberSelectLabel.style.display = 'block';
+  memberSelect.value = currentMember || 'shotaro';
+  $('#letter-name-container').style.display = 'none';
+} else if(currentMember === 'letters') {
+  modalMemberTitle.textContent = 'LETTER';
+  memberSelect.style.display = 'none';
+  memberSelectLabel.style.display = 'none';
+  $('#letter-name-container').style.display = 'block';
+  noteText.maxLength = 2000; // Increase limit for letters
+} else {
+  modalMemberTitle.textContent = currentMember.toUpperCase();
+  memberSelect.style.display = 'none';
+  memberSelectLabel.style.display = 'none';
+  $('#letter-name-container').style.display = 'none';
+  noteText.maxLength = 300; // Default for sticky notes
+}
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-if(currentMember === 'letters'){
-  previewText.className = 'letter-text';
-} else {
-  previewText.className = 'preview-text';
-}
-  const letterNameSection = $('#letter-name-section');
-const displayNameCheckbox = $('#display-name-checkbox');
-const displayNameInput = $('#display-name');
-
-if(currentMember === 'letters'){
-  noteText.maxLength = 2000;
-  letterNameSection.style.display = 'block';
-  displayNameCheckbox.checked = false;
-  displayNameInput.style.display = 'none';
-} else {
-  noteText.maxLength = 300; // regular notes
-  letterNameSection.style.display = 'none';
-}
-
-displayNameCheckbox.addEventListener('change',()=>{
-  displayNameInput.style.display = displayNameCheckbox.checked ? 'block' : 'none';
-});
-
 
 const closeModal = () => {
   modal.style.display = 'none';
@@ -520,12 +495,7 @@ function renderPickSection() {
     note.className = 'sticky-note';
     note.style.border = `4px solid #FFA500`; // gold border or pick any color
     note.innerHTML = `<img src="${imgFile}" alt="Letter placeholder ${i}">`;
-    note.onclick = () => {
-  currentMember = 'letters';
-  currentMode = 'member'; // or a separate 'letter' mode
-  currentImg = imgFile;
-  setupModal();
-};
+    note.onclick = () => openModalForMember('letters', imgFile); // Reuse modal
     wall.appendChild(note);
   }
 }
@@ -561,36 +531,41 @@ function setupPickFanDesignsRealtime() {
 function renderMemberWall(memberName){
   const wall = document.querySelector(`#${memberName}-wall`);
   if(!wall) return;
-  wall.innerHTML = ''; // clear existing notes
+  wall.innerHTML = '';
 
   const notesCol = collection(db, 'notes', memberName, 'memberNotes');
   onSnapshot(notesCol, snapshot => {
-    wall.innerHTML = ''; // clear before re-render
+    wall.innerHTML = '';
 
     snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
-
-      // Create sticky note container
       const noteDiv = document.createElement('div');
       noteDiv.className = 'sticky-note';
       noteDiv.style.border = `4px solid ${getMemberColor(memberName)}`;
 
-      // Create image element
       const imgEl = document.createElement('img');
       imgEl.src = data.img;
       imgEl.alt = "Note";
 
-      // Create label element with correct color
       const labelDiv = document.createElement('div');
       labelDiv.className = 'label';
       labelDiv.textContent = data.text;
-      labelDiv.style.color = data.color || '#000'; // fallback to black
+      labelDiv.style.color = data.color || '#000';
 
-      // Append image and label to note container
       noteDiv.appendChild(imgEl);
       noteDiv.appendChild(labelDiv);
 
-      // Append note to wall
+      // Add display name for letters
+      if(memberName === 'letters' && data.displayName){
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = data.displayName;
+        nameDiv.style.fontFamily = '"Patrick Hand", cursive'; // handwritten style
+        nameDiv.style.fontSize = '0.85rem';
+        nameDiv.style.color = '#000';
+        nameDiv.style.marginTop = '6px';
+        noteDiv.appendChild(nameDiv);
+      }
+
       wall.appendChild(noteDiv);
     });
   });
@@ -698,25 +673,29 @@ modalSubmit.addEventListener('click', async ()=>{
   const week = getCurrentWeek();
   const member = currentMode==='simple'?memberSelect.value:currentMember;
 
-  const noteData = {
-  img: currentImg,
-  text,
-  color,
-  likes: 0,
-  week,
-  timestamp: Date.now(),
-  creator: userId
-};
+  let name = '';
+  if(member === 'letters') {
+    const anon = $('#letter-anon').checked;
+    if(!anon){
+      name = $('#letter-name').value.trim();
+    }
+  }
 
-// If letters, add optional name
-if(currentMember === 'letters'){
-  noteData.showName = displayNameCheckbox.checked;
-  noteData.name = displayNameCheckbox.checked ? displayNameInput.value.trim() : '';
-}
-try{
+  const noteData = {
+    img: currentImg,
+    text,
+    color,
+    likes: 0,
+    week,
+    timestamp: Date.now(),
+    creator: userId,
+    displayName: name // Add displayName for letters
+  };
+
+  try{
     await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
-    alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
+    alert(`Your ${member === 'letters' ? 'letter' : 'note'} has been submitted!`);
   }catch(err){
     console.error(err);
     alert('Error submitting note.');

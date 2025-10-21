@@ -77,22 +77,29 @@ footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
 
   /* Desktop only: text over image */
+/* Desktop: text over image like submitted */
 @media (min-width: 769px) {
+  #modal-image-container {
+    position: relative; /* container for text overlay */
+    width: 100%;
+  }
+
   #modal-text {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden;
     padding: 10px;
     box-sizing: border-box;
-    overflow: hidden;
     white-space: pre-wrap;
     word-wrap: break-word;
+    text-align: center;
     pointer-events: none;
-    font-size: 1rem;
   }
 }
+
 
 /* ----------------- MOBILE RESPONSIVENESS ----------------- */
 @media (max-width:768px){
@@ -329,5 +336,6 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
+
 
 

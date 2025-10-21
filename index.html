@@ -721,7 +721,9 @@ noteText.addEventListener('input', e => {
 renderPickSection();
 setupPickFanDesignsRealtime();
 renderSimpleNotes();
-members.forEach(m => renderMemberWall(m.name));
+members.forEach(m => {
+  if(m.name !== 'letters') renderMemberWall(m.name); 
+});
 setupManageDesignsRealtime();
    // Add this line
 renderLettersSection();
@@ -729,3 +731,4 @@ renderLettersSection();
 
 </body>
 </html> 
+

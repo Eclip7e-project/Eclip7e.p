@@ -91,43 +91,91 @@ footer a:hover { text-decoration:underline; }
 
 /* ----------------- MOBILE RESPONSIVENESS ----------------- */
 @media (max-width: 768px) {
-  #modal-content { 
-    flex-direction: column; 
-    width: 95%; 
-    height: 90vh; 
-    padding: 10px; 
+  #modal-content {
+    flex-direction: column;
+    width: 95%;
+    height: 90vh;
+    padding: 10px;
   }
 
-  #modal-image-container { width: 100%; flex: none; align-items: center; }
-
-  #modal-img { width: 100%; height: auto; max-height: 50vh; object-fit: contain; }
-
-  #modal-text { position: absolute; top: 18%; left: 22%; right: 20%; font-size: 0.4rem; color: black; text-shadow: 1px 1px 2px white; }
-
-  #modal-comments { 
-    width: 100%; 
-    flex: 1; /* fill remaining vertical space */
-    display: flex; 
-    flex-direction: column; 
-    padding: 10px; 
-    overflow: hidden; /* prevent shrinking modal content */ 
+  #modal-image-container {
+    width: 100%;
+    flex: none;
+    align-items: center;
   }
 
-  #comments-list { 
-    flex: 1; 
-    overflow-y: auto; 
-    margin-bottom: 5px; 
+  #modal-img {
+    width: 100%;
+    height: auto;
+    max-height: 50vh;
+    object-fit: contain;
   }
 
-  #modal-buttons { margin-top: 10px; justify-content: center; gap: 8px; }
-  #modal-like, #modal-delete, #submit-comment { font-size: 0.9rem; padding: 6px 12px; }
-  .comment .text { font-size: 0.9rem; }
+  #modal-text {
+    position: absolute;
+    top: 18%;
+    left: 22%;
+    right: 20%;
+    font-size: 0.4rem;
+    color: black;
+    text-shadow: 1px 1px 2px white;
+  }
 
-  #comment-input { 
-    font-size: 0.9rem; 
-    width: 100%; 
-    flex: none; 
-    margin-top: 5px; 
+  #modal-comments {
+    width: 100%;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column-reverse; /* keeps input at bottom */
+    max-height: none;
+    overflow: hidden;
+    margin-top: 15px;
+    padding: 0 10px 10px 10px;
+  }
+
+  #comments-list {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column-reverse; /* newest at bottom, scrollable */
+    gap: 5px;
+  }
+
+  #comment-input {
+    flex: none;
+    font-size: 0.9rem;
+    width: 100%;
+    resize: none;
+    border-radius: 5px;
+    border: none;
+    padding: 5px;
+    margin-top: 5px;
+  }
+
+  #submit-comment {
+    margin-top: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background: gold;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  #modal-buttons {
+    margin-top: 10px;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #modal-like, #modal-delete {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+  }
+
+  .comment .text {
+    font-size: 0.9rem;
   }
 }
 </style>
@@ -370,6 +418,7 @@ modalDelete.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

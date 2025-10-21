@@ -30,15 +30,9 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  padding:10px;
-  color:black;
+  top:10px; left:10px; right:10px;
   font-size:0.75rem;
-  white-space:pre-wrap;
-  overflow-wrap:break-word;
+  white-space:pre-wrap; overflow-wrap:break-word;
   pointer-events:none;
 }
 
@@ -48,8 +42,8 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
   flex-direction:column;
   gap:5px;
   position:absolute;
-  top:0;
-  right:0;
+  top:10px;
+  right:10px;
   max-width:80px;
   font-size:0.65rem;
   color:white;
@@ -185,7 +179,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// Render notes with comments
+// Render notes with comments beside
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -220,15 +214,16 @@ function renderNotes(notes){
       const item=document.createElement('div');
       item.className='comment-item';
       item.textContent=c.text;
-      if(c.creator===userId) item.querySelector?.('.comment-delete')?.style.display='inline-block';
+
       const del=document.createElement('span');
       del.className='comment-delete';
       del.textContent='✖';
+      if(c.creator===userId) del.style.display='inline-block';
       del.onclick=async e=>{
         e.stopPropagation();
         if(confirm('Delete comment?')){
-          c.toDelete=true; // mark for deletion
-          await updateDoc(doc(db,'notes',memberName,'memberNotes',n.id),{ comments: n.comments.filter(x=>x!==c) });
+          const updatedComments = n.comments.filter(x=>x!==c);
+          await updateDoc(doc(db,'notes',memberName,'memberNotes',n.id), { comments: updatedComments });
         }
       };
       item.appendChild(del);

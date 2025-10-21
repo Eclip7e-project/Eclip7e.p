@@ -49,6 +49,7 @@ body {
   margin: 0;
   padding: 0;
 }
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
     html,body{margin:0;padding:0;background:var(--bg); color:#fff;font-family:'Playfair Display',serif;}
@@ -216,7 +217,7 @@ body {
    <!-- ✅ NEW LETTERS SECTION -->
   <div class="member-section" id="letters-selection">
     <h3>LETTERS</h3>
-   <div class="wall" data-member="letters" id="letters-wall"></div>
+    <div class="wall" data-member="letters"></div>
   </div>
 
 <section id="design-submission" style="margin-top:36px;">
@@ -316,14 +317,7 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <label>Text color</label>
         <input id="color-picker" type="color" value="#000000">
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
-       <textarea id="note-text" placeholder="Write your message"></textarea>
-<small id="char-count" style="display:block; text-align:right; color:#888; margin-top:2px;">0 / 300</small>
-        <!-- Inside modal-right -->
-<div id="letter-name-container" style="display:none; margin-top:8px;">
-  <label for="letter-name">Your Name (optional)</label>
-  <input type="text" id="letter-name" placeholder="Enter your name" style="width:100%;padding:6px;border-radius:6px;border:1px solid #ccc;">
-  <label><input type="checkbox" id="letter-anon" checked> Stay anonymous</label>
-</div>
+        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
         <div class="modal-actions">
           <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
           <button class="btn btn-submit" id="modal-submit">Submit</button>
@@ -406,18 +400,6 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
-  // Set dynamic placeholder & limit
-  if(currentMember === 'letters'){
-    noteText.placeholder = 'Write your letter (max 2000 chars)';
-  } else {
-    noteText.placeholder = 'Write your message (max 300 chars)';
-  }
-
-// Update the label above textarea dynamically
-const label = noteText.previousElementSibling; // gets the <label> right above
-label.textContent = currentMember === 'letters' ? 'Write your letter (max 2000 chars)' : 'Write your message (max 300 chars)';
-
-  
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -431,11 +413,7 @@ label.textContent = currentMember === 'letters' ? 'Write your letter (max 2000 c
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  
-  // Reset char count
-  charCount.textContent = `0 / ${currentMember === 'letters' ? 2000 : 300}`;
 }
-
 
 const closeModal = () => {
   modal.style.display = 'none';
@@ -563,26 +541,16 @@ function renderMemberWall(memberName){
       labelDiv.textContent = data.text;
       labelDiv.style.color = data.color || '#000'; // fallback to black
 
+      // Append image and label to note container
       noteDiv.appendChild(imgEl);
       noteDiv.appendChild(labelDiv);
-
-      // ✅ Optional display name for letters
-      if(memberName === 'letters' && data.displayName){
-        const nameDiv = document.createElement('div');
-        nameDiv.textContent = data.displayName;
-        nameDiv.style.fontFamily = '"Comic Sans MS", cursive, sans-serif'; // handwritten style
-        nameDiv.style.fontSize = '0.85rem';
-        nameDiv.style.marginTop = '4px';
-        nameDiv.style.textAlign = 'right';
-        nameDiv.style.color = '#333';
-        noteDiv.appendChild(nameDiv);
-      }
 
       // Append note to wall
       wall.appendChild(noteDiv);
     });
   });
 }
+
 
 // ----------------- Simple Notes -----------------
 function renderSimpleNotes(){
@@ -677,13 +645,13 @@ function setupManageDesignsRealtime() {
 }
 
 // ----------------- Submit Modal Note -----------------
-modalSubmit.addEventListener('click', async () => {
+modalSubmit.addEventListener('click', async ()=>{
   const text = noteText.value.trim();
-  if (!text) { alert('Write something!'); return; }
+  if(!text){ alert('Write something!'); return; }
 
   const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
-  const member = currentMode === 'simple' ? memberSelect.value : currentMember;
+  const member = currentMode==='simple'?memberSelect.value:currentMember;
 
   const noteData = {
     img: currentImg,
@@ -695,43 +663,21 @@ modalSubmit.addEventListener('click', async () => {
     creator: userId
   };
 
-  // ✅ Handle optional name for letters
-  if (member === 'letters') {
-    const anon = document.querySelector('#letter-anon').checked;
-    const nameInput = document.querySelector('#letter-name').value.trim();
-    noteData.displayName = (!anon && nameInput) ? nameInput : null;
-  }
-
-  try {
-    await addDoc(collection(db, 'notes', member, 'memberNotes'), noteData);
+  try{
+    await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
     alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
-  } catch (err) {
-    console.error('Firestore error:', err);
-    alert('Error submitting note. Check console for details.');
+  }catch(err){
+    console.error(err);
+    alert('Error submitting note.');
   }
-});
-
-
-const charCount = $('#char-count');
-
-noteText.addEventListener('input', e => {
-  // Determine limit based on current member
-  const limit = currentMember === 'letters' ? 2000 : 300;
-  if(e.target.value.length > limit){
-    e.target.value = e.target.value.slice(0, limit);
-  }
-  charCount.textContent = `${e.target.value.length} / ${limit}`;
-  previewText.textContent = e.target.value;
 });
 
 // ----------------- Initialize -----------------
 renderPickSection();
 setupPickFanDesignsRealtime();
 renderSimpleNotes();
-members.forEach(m => {
-  if(m.name !== 'letters') renderMemberWall(m.name); 
-});
+members.forEach(m => renderMemberWall(m.name));
 setupManageDesignsRealtime();
    // Add this line
 renderLettersSection();
@@ -739,6 +685,3 @@ renderLettersSection();
 
 </body>
 </html> 
-
-
-

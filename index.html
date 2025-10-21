@@ -415,6 +415,11 @@ function setupModal() {
     noteText.placeholder = 'Write your message (max 300 chars)';
   }
 
+// Update the label above textarea dynamically
+const label = noteText.previousElementSibling; // gets the <label> right above
+label.textContent = currentMember === 'letters' ? 'Write your letter (max 2000 chars)' : 'Write your message (max 300 chars)';
+
+  
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -726,6 +731,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

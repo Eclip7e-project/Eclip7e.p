@@ -94,7 +94,7 @@ footer a:hover { text-decoration:underline; }
   #modal-content {
     flex-direction: column;
     width: 95%;
-    height: 90vh;
+    max-height: 90vh;
     padding: 10px;
   }
 
@@ -125,34 +125,27 @@ footer a:hover { text-decoration:underline; }
     width: 100%;
     flex: 1 1 auto;
     display: flex;
-    flex-direction: column-reverse; /* keeps input at bottom */
-    max-height: none;
-    overflow: hidden;
-    margin-top: 15px;
-    padding: 0 10px 10px 10px;
-  }
-
-  #comments-list {
-    overflow-y: auto;
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column-reverse; /* newest at bottom, scrollable */
+    flex-direction: column;
     gap: 5px;
+    max-height: 35vh; /* adjust as needed */
+    overflow-y: auto; /* scroll when overflowing */
+    margin-top: 15px;
+    padding: 0 10px;
   }
 
   #comment-input {
-    flex: none;
-    font-size: 0.9rem;
     width: 100%;
     resize: none;
     border-radius: 5px;
     border: none;
     padding: 5px;
-    margin-top: 5px;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    flex: none;
   }
 
   #submit-comment {
-    margin-top: 5px;
+    margin-bottom: 10px;
     padding: 5px 10px;
     border: none;
     border-radius: 5px;
@@ -161,6 +154,14 @@ footer a:hover { text-decoration:underline; }
     font-weight: bold;
     cursor: pointer;
     font-size: 0.9rem;
+    flex: none;
+  }
+
+  #comments-list {
+    display: flex;
+    flex-direction: column-reverse; /* newest at top */
+    overflow-y: auto;
+    gap: 5px;
   }
 
   #modal-buttons {
@@ -418,6 +419,7 @@ modalDelete.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

@@ -7,283 +7,46 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-body {
-  font-family: 'Playfair Display', serif;
-  background-color:black;
-  background-image:url('https://www.transparenttextures.com/patterns/stardust.png');
-  color:white;
-  margin:0;
-  padding:0;
-  text-align:center;
-}
-header {
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  background:black;
-  border-bottom:2px solid gold;
-}
-header img.banner {
-  width:100%;
-  height:auto;
-  object-fit:contain;
-  border-bottom:2px solid gold;
-}
-.header-text {
-  text-align:center;
-  padding:20px;
-}
-.header-text h1 {
-  font-size:2.5rem;
-  color:gold;
-  margin:10px 0;
-  text-shadow:2px 2px 5px rgba(0,0,0,0.7);
-}
-.header-text p {
-  max-width:700px;
-  font-size:1rem;
-  margin:0 auto;
-  color:white;
-  text-shadow:1px 1px 3px rgba(0,0,0,0.7);
-}
+body { font-family: 'Playfair Display', serif; background-color:black; background-image:url('https://www.transparenttextures.com/patterns/stardust.png'); color:white; margin:0; padding:0; text-align:center; }
+header { display:flex; flex-direction:column; align-items:center; background:black; border-bottom:2px solid gold; }
+header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2px solid gold; }
+.header-text { text-align:center; padding:20px; }
+.header-text h1 { font-size:2.5rem; color:gold; margin:10px 0; text-shadow:2px 2px 5px rgba(0,0,0,0.7); }
+.header-text p { max-width:700px; font-size:1rem; margin:0 auto; color:white; text-shadow:1px 1px 3px rgba(0,0,0,0.7); }
 
-section.wall {
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:flex-start;
-  gap:20px;
-  padding:40px;
-}
-.sticky-note {
-  width:200px;
-  height:200px;
-  position:relative;
-  cursor:pointer;
-  border-radius:15px;
-  overflow:hidden;
-}
-.sticky-note img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.sticky-note .text {
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:10px;
-  color:black;
-  font-size:0.75rem;
-  white-space:pre-wrap;
-  overflow-wrap:break-word;
-  word-break:break-word;
-}
+section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
+.sticky-note .text { position:absolute; color:black; font-size:0.75rem; white-space:pre-wrap; overflow-wrap:break-word; }
 
-.top-note {
-  border:5px solid gold;
-  box-shadow:0 0 15px gold;
-}
+.top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
-#modal {
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.9);
-  justify-content:center;
-  align-items:center;
-  z-index:1000;
-  overflow:auto;
-}
-#modal-content {
-  position:relative;
-  background:black;
-  border-radius:15px;
-  max-width:95%;
-  width:auto;
-  max-height:95%;
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px;
-  padding:20px;
-  justify-content:center;
-}
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { position:relative; background:black; border-radius:15px; max-width:95%; width:95%; max-height:95%; display:flex; gap:20px; padding:20px; overflow:auto; flex-wrap:wrap; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
-/* On mobile: stack note above comments */
-@media (max-width: 768px) {
-  #modal-content {
-    flex-direction: column;
-  }
-  #modal-comments {
-    max-height: none;
-    width: 100%;
-  }
-  #modal-image-container {
-    width: 100%;
-    max-width: 100%;
-  }
-}
+#modal-image-container { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+#modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
 
-#modal-close {
-  position:absolute;
-  top:10px;
-  right:10px;
-  cursor:pointer;
-  font-size:1.2rem;
-  font-weight:bold;
-  background:red;
-  color:white;
-  border:none;
-  border-radius:5px;
-  padding:3px 7px;
-  z-index:1001;
-}
+#modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; }
+#modal-comments h3 { margin-top:0; color:gold; text-align:center; }
+.comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
+.comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
+.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
+.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
 
-#modal-image-container {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  position:relative;
-}
+#comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
+#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
 
-#modal-note {
-  position:relative;
-  width:auto;
-  max-width:400px;
-  max-height:400px;
-}
-#modal-note img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:15px;
-  display:block;
-}
-#modal-note .text {
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:10px;
-  color:black;
-  font-size:0.75rem;
-  white-space:pre-wrap;
-  overflow-wrap:break-word;
-  word-break:break-word;
-  pointer-events:none;
-}
+footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
+footer a { color:gold; text-decoration:none; }
+footer a:hover { text-decoration:underline; }
 
-#modal-buttons {
-  margin-top:10px;
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-}
-#modal-like {
-  padding:5px 10px;
-  cursor:pointer;
-  background:gold;
-  border:none;
-  border-radius:5px;
-  color:black;
-  font-weight:bold;
-}
-#modal-delete {
-  display:none;
-  background:red;
-  color:white;
-  border:none;
-  border-radius:5px;
-  padding:5px 10px;
-  cursor:pointer;
-}
-
-#modal-comments {
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  background:#111;
-  border-radius:10px;
-  padding:10px;
-  max-height:80vh;
-  overflow:auto;
-}
-#modal-comments h3 {
-  margin-top:0;
-  color:gold;
-  text-align:center;
-}
-.comment {
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  margin-bottom:5px;
-  background:#222;
-  padding:5px;
-  border-radius:5px;
-  flex-wrap:wrap;
-}
-.comment .username {
-  font-weight:bold;
-  color:#FFD700;
-  margin-right:5px;
-}
-.comment .text {
-  flex:1;
-  white-space:pre-wrap;
-  word-break:break-word;
-  margin-top:2px;
-  font-size:0.8rem;
-}
-.comment button {
-  margin-left:5px;
-  background:red;
-  color:white;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-  padding:2px 5px;
-  font-size:0.7rem;
-}
-
-#comment-input {
-  width:100%;
-  resize:none;
-  border-radius:5px;
-  border:none;
-  padding:5px;
-  margin-top:5px;
-}
-#submit-comment {
-  margin-top:5px;
-  padding:5px 10px;
-  border:none;
-  border-radius:5px;
-  background:gold;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-footer {
-  padding:30px 0;
-  border-top:2px solid gold;
-  margin-top:50px;
-}
-footer a {
-  color:gold;
-  text-decoration:none;
-}
-footer a:hover {
-  text-decoration:underline;
+@media(max-width:768px){
+  #modal-content { flex-direction:column; }
+  #modal-comments { max-height:none; width:100%; margin-top:10px; }
 }
 </style>
 </head>
@@ -326,6 +89,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
+// Firebase
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain:"rii7e-sticky-notes-project.firebaseapp.com",
@@ -339,6 +103,7 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
+// User info
 let username = localStorage.getItem('username') || prompt("Choose a username:") || "Anonymous";
 localStorage.setItem('username', username);
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
@@ -346,15 +111,20 @@ let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', c
 const wall = document.getElementById('anton-wall');
 const modal = document.getElementById('modal');
 const modalImageContainer = document.getElementById('modal-image-container');
-const modalComments = document.getElementById('modal-comments');
+const modalLike = document.createElement('button');
+modalLike.id='modal-like';
+const modalDelete = document.createElement('button');
+modalDelete.id='modal-delete';
+modalDelete.textContent='Delete';
+const modalClose = document.getElementById('modal-close');
 const commentsList = document.getElementById('comments-list');
 const commentInput = document.getElementById('comment-input');
 const submitComment = document.getElementById('submit-comment');
-const modalClose = document.getElementById('modal-close');
 
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
+// Render Anton's notes
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -367,77 +137,81 @@ function renderNotes(notes){
     if(n.id===topNoteId) div.classList.add('top-note');
     const imgEl = document.createElement('img'); imgEl.src=n.img; imgEl.alt='Note';
     const textDiv = document.createElement('div'); textDiv.className='text'; textDiv.textContent=n.text; textDiv.style.color=n.color||'black';
-    div.appendChild(imgEl);
-    div.appendChild(textDiv);
+    if(n.position) Object.assign(textDiv.style,n.position);
+    div.appendChild(imgEl); div.appendChild(textDiv);
     div.onclick = ()=>openModal(n);
     wall.appendChild(div);
   });
 }
 
+// Open modal
 async function openModal(note){
   currentModalNote = note;
+  const docRef = doc(db,'notes','anton','memberNotes',note.id);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
-  // Clear modal content
-  const imgContainer = document.getElementById('modal-image-container');
-  imgContainer.innerHTML = '';
+  // Clear modal container
+  modalImageContainer.innerHTML='';
+  modalImageContainer.appendChild(modalLike);
+  modalImageContainer.appendChild(modalDelete);
 
-  // Clone the note exactly as it appears
+  // Clone note exactly
   const noteDiv = document.createElement('div');
-  noteDiv.className = 'sticky-note';
-  noteDiv.style.width = 'auto'; // allow modal scaling
-  noteDiv.style.height = 'auto';
-  noteDiv.style.maxWidth = '80vw';
-  noteDiv.style.maxHeight = '80vh';
-  noteDiv.style.position = 'relative';
+  noteDiv.className='sticky-note';
+  noteDiv.style.width='80%';
+  noteDiv.style.height='auto';
+  noteDiv.style.position='relative';
 
   const imgEl = document.createElement('img');
-  imgEl.src = note.img;
-  imgEl.alt = 'Note';
-  imgEl.style.width = '100%';
-  imgEl.style.height = '100%';
-  imgEl.style.objectFit = 'cover';
+  imgEl.src=currentModalNote.img;
+  imgEl.style.width='100%';
+  imgEl.style.height='100%';
+  imgEl.style.objectFit='cover';
 
   const textDiv = document.createElement('div');
-  textDiv.className = 'text';
-  textDiv.textContent = note.text;
-  textDiv.style.color = note.color || 'black';
-  textDiv.style.top = note.top || '10px';
-  textDiv.style.left = note.left || '10px';
-  textDiv.style.right = note.right || '10px';
-  textDiv.style.bottom = note.bottom || '10px';
-  textDiv.style.fontSize = note.fontSize || '0.75rem';
-  textDiv.style.whiteSpace = 'pre-wrap';
+  textDiv.className='text';
+  textDiv.textContent=currentModalNote.text;
+  textDiv.style.color=currentModalNote.color||'black';
+  if(currentModalNote.position) Object.assign(textDiv.style,currentModalNote.position);
+  textDiv.style.whiteSpace='pre-wrap';
 
   noteDiv.appendChild(imgEl);
   noteDiv.appendChild(textDiv);
-  imgContainer.appendChild(noteDiv);
+  modalImageContainer.insertBefore(noteDiv, modalLike);
 
-  // Like & delete buttons under note
-  const buttonsDiv = document.getElementById('modal-buttons');
-  buttonsDiv.style.display = 'flex';
-  buttonsDiv.style.justifyContent = 'center';
-  modalLike.textContent = `❤ ${note.likes || 0}`;
-  modalDelete.style.display = (note.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
-  buttonsDiv.appendChild(modalLike);
-  buttonsDiv.appendChild(modalDelete);
-
-  modal.style.display = 'flex';
-  loadComments();
-}
-
-
-  buttonsDiv.appendChild(likeBtn);
-  buttonsDiv.appendChild(deleteBtn);
-  modalImageContainer.appendChild(buttonsDiv);
+  modalLike.textContent=`❤ ${currentModalNote.likes||0}`;
+  modalDelete.style.display=(currentModalNote.creator===userId) ? 'inline-block' : 'none';
 
   modal.style.display='flex';
   loadComments();
 }
 
+// Close modal
 modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
 modal.onclick = ()=> modal.style.display='none';
 document.getElementById('modal-content').onclick = e=> e.stopPropagation();
 
+// Like note
+modalLike.onclick = async () => {
+  if(!currentModalNote) return;
+  let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
+  if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
+  await updateDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id), { likes:(currentModalNote.likes||0)+1 });
+  currentModalNote.likes = (currentModalNote.likes||0)+1;
+  modalLike.textContent = `❤ ${currentModalNote.likes}`;
+  liked.push(currentModalNote.id); localStorage.setItem('likedNotes', JSON.stringify(liked));
+};
+
+// Delete note
+modalDelete.onclick = async ()=>{
+  if(!currentModalNote) return;
+  if(!confirm("Delete your note?")) return;
+  await deleteDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id));
+  modal.style.display='none';
+};
+
+// Load comments
 function loadComments(){
   if(!currentModalNote) return;
   if(commentsUnsubscribe) commentsUnsubscribe();
@@ -467,6 +241,7 @@ function loadComments(){
   });
 }
 
+// Submit comment
 submitComment.onclick = async ()=>{
   const text = commentInput.value.trim();
   if(!text || !currentModalNote) return;
@@ -475,6 +250,7 @@ submitComment.onclick = async ()=>{
   commentInput.value='';
 };
 
+// Firestore realtime
 const notesCol = collection(db,'notes','anton','memberNotes');
 onSnapshot(notesCol, snapshot=>{
   const notes = snapshot.docs.map(d=>({id:d.id, creator:d.data().creator, ...d.data()}));
@@ -483,5 +259,3 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
-
-

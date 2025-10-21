@@ -26,90 +26,60 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; }
+.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; display:flex; flex-direction:column; }
 .sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
 .sticky-note .text {
   position:absolute;
-  top:10px;
-  left:10px;
-  right:10px;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  padding:10px;
   color:black;
   font-size:0.75rem;
   white-space:pre-wrap;
   overflow-wrap:break-word;
+  pointer-events:none;
 }
+
+/* COMMENTS */
+.comment-list {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  position:absolute;
+  top:0;
+  right:0;
+  max-width:80px;
+  font-size:0.65rem;
+  color:white;
+  text-align:left;
+}
+.comment-item { display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); border-radius:5px; padding:2px 5px; }
+.comment-delete { cursor:pointer; color:red; margin-left:5px; display:none; }
 
 /* Highlight top note */
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:1000; }
-#modal-content { position:relative; background:black; border-radius:15px; max-width:90%; width:90%; max-height:90%; display:flex; gap:20px; flex-direction:column; padding:20px; overflow-y:auto; }
-#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
-
-#modal-image-container { position:relative; flex:1; display:flex; flex-direction:column; align-items:center; }
-#modal-img { width:100%; max-height:50vh; object-fit:contain; border-radius:15px; }
-#modal-text { 
-  position:absolute; top:10px; left:10px; right:10px; bottom:10px; 
-  font-size:1rem; white-space:pre-wrap; overflow-wrap:break-word; 
-  pointer-events:none; text-shadow:1px 1px 3px white;
-}
-
-/* Buttons under image */
-#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:1000; }
+#modal-content { position:relative; background:transparent; border-radius:15px; max-width:500px; width:90%; max-height:90%; overflow:auto; }
+#modal-img { width:100%; border-radius:15px; display:block; }
+#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:1rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 3px white; }
+#modal-buttons { margin-top:10px; display:flex; justify-content:center; gap:10px; }
 #modal-like { padding:5px 10px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
-#modal-delete { background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
-
-/* Comments */
-#modal-comments { flex:1; display:flex; flex-direction:column; background:#111; border-radius:10px; padding:10px; max-height:80vh; overflow:auto; margin-top:10px; }
-#modal-comments h3 { margin-top:0; color:gold; text-align:center; }
-.comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
-.comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
-.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
-.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
-
-#comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
-#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
+#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; }
+#modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
 
 /* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
 footer a { color:gold; text-decoration:none; }
 footer a:hover { text-decoration:underline; }
 
-  /* Desktop only: text over image */
-/* Desktop: text over image like submitted */
-@media (min-width: 769px) {
-  #modal-image-container {
-    position: relative; /* container for text overlay */
-    width: 100%;
-  }
-
-  #modal-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    padding: 10px;
-    box-sizing: border-box;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    text-align: center;
-    pointer-events: none;
-  }
-}
-
-
-/* ----------------- MOBILE RESPONSIVENESS ----------------- */
-@media (max-width:768px){
-  #modal-content { width:95%; padding:10px; height:90vh; overflow-y:auto; }
-  #modal-img { max-height:50vh; }
-  #modal-text { font-size:0.9rem; }
-  #modal-like,#modal-delete,#submit-comment { font-size:0.9rem; padding:6px 12px; }
-  #comment-input { font-size:0.9rem; }
-  #modal-comments { overflow:visible; max-height:none; }
-  #comments-list { display:flex; flex-direction:column-reverse; gap:5px; }
+/* DESKTOP: comments beside note */
+@media(min-width:768px){
+  .sticky-note { flex-direction:row; }
+  .comment-list { position:static; max-width:80px; margin-left:5px; }
 }
 </style>
 </head>
@@ -130,19 +100,13 @@ footer a:hover { text-decoration:underline; }
 <div id="modal">
   <div id="modal-content">
     <button id="modal-close">X</button>
-    <div id="modal-image-container">
+    <div style="position:relative;">
       <img id="modal-img" src="">
       <div id="modal-text"></div>
     </div>
     <div id="modal-buttons">
       <button id="modal-like">❤ 0</button>
       <button id="modal-delete">Delete</button>
-    </div>
-    <div id="modal-comments">
-      <h3>Comments</h3>
-      <textarea id="comment-input" rows="3" placeholder="Write a comment..."></textarea>
-      <button id="submit-comment">Send</button>
-      <div id="comments-list"></div>
     </div>
   </div>
 </div>
@@ -154,8 +118,7 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, getDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // Firebase
 const firebaseConfig = {
@@ -168,9 +131,8 @@ const firebaseConfig = {
 };
 initializeApp(firebaseConfig);
 const db = getFirestore();
-const auth = getAuth();
-signInAnonymously(auth).catch(console.error);
 
+// Variables
 const memberName = "anton";
 const wall = document.getElementById('anton-wall');
 const modal = document.getElementById('modal');
@@ -179,9 +141,6 @@ const modalText = document.getElementById('modal-text');
 const modalLike = document.getElementById('modal-like');
 const modalClose = document.getElementById('modal-close');
 const modalDelete = document.getElementById('modal-delete');
-const commentInput = document.getElementById('comment-input');
-const submitComment = document.getElementById('submit-comment');
-const commentsList = document.getElementById('comments-list');
 
 let currentModalNote = null;
 let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
@@ -189,17 +148,15 @@ let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', c
 // Open modal
 async function openModal(note){
   currentModalNote = note;
+  
   const docRef = doc(db,'notes',memberName,'memberNotes',note.id);
   const docSnap = await getDoc(docRef);
   if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
-  modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
-  modalDelete.style.display = (currentModalNote.creator === userId || currentModalNote.admin) ? 'inline-block' : 'none';
-  
-  loadComments();
+  modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
 }
 
@@ -223,43 +180,12 @@ modalLike.onclick = async () => {
 // Delete button
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete this note?")) return;
+  if(!confirm("Delete your note?")) return;
   await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id));
   modal.style.display='none';
 };
 
-// Comments
-async function loadComments(){
-  commentsList.innerHTML='';
-  const commentsCol = collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments');
-  const q = query(commentsCol, orderBy('timestamp','desc'));
-  onSnapshot(q, snapshot=>{
-    commentsList.innerHTML='';
-    snapshot.docs.forEach(d=>{
-      const c = d.data();
-      const div = document.createElement('div');
-      div.className='comment';
-      div.innerHTML = `<span class="username">${c.user}</span>: <span class="text">${c.text}</span>`;
-      if(c.userId===userId || currentModalNote.admin){
-        const delBtn = document.createElement('button');
-        delBtn.textContent='X';
-        delBtn.onclick=async ()=> await deleteDoc(doc(commentsCol,d.id));
-        div.appendChild(delBtn);
-      }
-      commentsList.appendChild(div);
-    });
-  });
-}
-
-submitComment.onclick = async ()=>{
-  const text = commentInput.value.trim();
-  if(!text) return;
-  const commentsCol = collection(db,'notes',memberName,'memberNotes',currentModalNote.id,'comments');
-  await addDoc(commentsCol, { text, user:userId.substring(0,6), userId, timestamp:serverTimestamp() });
-  commentInput.value='';
-};
-
-// Render notes
+// Render notes with comments
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -285,10 +211,33 @@ function renderNotes(notes){
     const textDiv=document.createElement('div');
     textDiv.className='text';
     textDiv.textContent=n.text;
-    textDiv.style.color=n.color || 'black';
+    textDiv.style.color=n.color||'black';
+
+    // Comment list
+    const commentList=document.createElement('div');
+    commentList.className='comment-list';
+    if(n.comments) n.comments.forEach(c=>{
+      const item=document.createElement('div');
+      item.className='comment-item';
+      item.textContent=c.text;
+      if(c.creator===userId) item.querySelector?.('.comment-delete')?.style.display='inline-block';
+      const del=document.createElement('span');
+      del.className='comment-delete';
+      del.textContent='✖';
+      del.onclick=async e=>{
+        e.stopPropagation();
+        if(confirm('Delete comment?')){
+          c.toDelete=true; // mark for deletion
+          await updateDoc(doc(db,'notes',memberName,'memberNotes',n.id),{ comments: n.comments.filter(x=>x!==c) });
+        }
+      };
+      item.appendChild(del);
+      commentList.appendChild(item);
+    });
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
+    div.appendChild(commentList);
 
     div.onclick = ()=>openModal(n);
 
@@ -315,6 +264,7 @@ function renderNotes(notes){
       ctx.quadraticCurveTo(0,0,radius,0);
       ctx.closePath();
       ctx.clip();
+
       ctx.drawImage(canvas,0,0);
 
       const link=document.createElement('a');
@@ -336,6 +286,3 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
-
-
-

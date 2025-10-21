@@ -29,9 +29,6 @@
   font-weight: bold;
 }
 
-<!-- Add this inside <head> -->
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-
 .letter-text {
   position: absolute;
   top: 2.3cm;
@@ -41,18 +38,9 @@
   font-size: 0.5rem;
   line-height: 1.4;
   white-space: pre-wrap;
-  text-align: left;
   word-wrap: break-word;
+  text-align: left;
 }
-
-.letter-name {
-  text-align: center;
-  font-family: 'Pacifico', cursive;
-  color: #222;
-  font-size: 1rem;
-  margin-top: 6px;
-}
-
      
      :root {
   --gold: #d4af37;
@@ -323,49 +311,48 @@ Thank you for helping us celebrate and support RII7E! 🧡
           <div class="preview-text" id="preview-text"></div>
         </div>
       </div>
-     <div class="modal-right">
-  <h3 id="modal-member">Member</h3>
-  <label id="member-select-label" style="display:none">Choose member (for plain notes)</label>
-  <select id="member-select" style="display:none; width:100%; padding:8px; border-radius:8px; margin-bottom:8px;">
-    <option value="shotaro">SHOTARO</option>
-    <option value="eunseok">EUNSEOK</option>
-    <option value="sungchan">SUNGCHAN</option>
-    <option value="wonbin">WONBIN</option>
-    <option value="seunghan">SEUNGHAN</option>
-    <option value="sohee">SOHEE</option>
-    <option value="anton">ANTON</option>
-    <option value="rii7e">RII7E</option>
-    <option value="brii7e">BRII7E</option>
-    <option value="letters">LETTERS</option>
-  </select>
-
-  <label>Text color</label>
-  <input id="color-picker" type="color" value="#000000">
-
-  <label style="margin-top:10px">Write your message</label>
-  <textarea id="note-text" placeholder="Write your message..."></textarea>
-
-  <div id="name-section" style="margin-top:10px; display:none;">
-    <input type="checkbox" id="display-name-checkbox">
-    <label for="display-name-checkbox">Display my name under this letter</label>
-    <input type="text" id="display-name" placeholder="Enter your name" style="display:none; width:100%; margin-top:6px; padding:6px; border-radius:8px; border:1px solid #ccc;">
-  </div>
-
-  <div class="modal-actions">
-    <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
-    <button class="btn btn-submit" id="modal-submit">Submit</button>
-  </div>
+      <div class="modal-right">
+        <h3 id="modal-member">Member</h3>
+        <label id="member-select-label" style="display:none">Choose member (for plain notes)</label>
+        <select id="member-select" style="display:none; width:100%; padding:8px; border-radius:8px; margin-bottom:8px;">
+          <option value="shotaro">SHOTARO</option>
+          <option value="eunseok">EUNSEOK</option>
+          <option value="sungchan">SUNGCHAN</option>
+          <option value="wonbin">WONBIN</option>
+          <option value="seunghan">SEUNGHAN</option>
+          <option value="sohee">SOHEE</option>
+          <option value="anton">ANTON</option>
+          <option value="rii7e">RII7E</option>
+          <option value="brii7e">BRII7E</option>
+        </select>
+        <label>Text color</label>
+        <input id="color-picker" type="color" value="#000000">
+        <label style="margin-top:10px">Write your message (max 300 chars)</label>
+        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
+        <!-- Add under the textarea -->
+<div id="letter-name-section" style="margin-top:10px; display:none;">
+  <input type="checkbox" id="display-name-checkbox">
+  <label for="display-name-checkbox">Display my name under this letter</label>
+  <input type="text" id="display-name" placeholder="Enter your name" style="display:none;width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1px solid #ccc;">
+</div>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
+          <button class="btn btn-submit" id="modal-submit">Submit</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { 
-  getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc 
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+
+
+<script type="module">
+// ----------------- Firebase SDK -----------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+// ----------------- Firebase Setup -----------------
 const firebaseConfig = {
   apiKey: "AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
   authDomain: "rii7e-sticky-notes-project.firebaseapp.com",
@@ -377,6 +364,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ----------------- Members -----------------
 const members = [
   {name:'shotaro', color:'#8B0000'},
   {name:'eunseok', color:'#D3D3D3'},
@@ -387,11 +375,13 @@ const members = [
   {name:'anton', color:'#1E3A5F'},
   {name:'rii7e', color:'#FFA500'},
   {name:'brii7e', color:'#FFA500'},
-  {name:'letters', color:'#A0522D'}
+  {name:'letters', color:'#A0522D'} // ✅ NEW MEMBER-LIKE SECTION
 ];
 
+// ----------------- DOM Helpers -----------------
 const $ = s => document.querySelector(s);
 
+// ----------------- Modal Elements -----------------
 const modal = $('#modal');
 const modalClose = $('#modal-close');
 const modalCancel = $('#modal-cancel');
@@ -407,7 +397,7 @@ const designFileInput = $('#design-file');
 const designMember = $('#design-member');
 const submitDesignBtn = $('#submitDesign');
 const designMsg = $('#design-msg');
-const designContainer = $('#designContainer');
+const designContainer = $('#designContainer'); // Manage Designs container
 
 let currentImg = '';
 let currentMember = '';
@@ -416,45 +406,9 @@ let currentMode = 'member';
 const userId = localStorage.getItem('userId') || crypto.randomUUID();
 localStorage.setItem('userId', userId);
 
+// ----------------- Helpers -----------------
 const getMemberColor = name => members.find(m => m.name === name)?.color || '#ccc';
 const getCurrentWeek = () => Math.floor((new Date() - new Date('2025-09-04')) / (7*24*60*60*1000)) + 1;
-
-// -------- Add display-name inputs dynamically for letters --------
-let nameInput, showNameCheckbox, nameLabel;
-function addNameOptionIfLetters() {
-  // Remove previous if exist
-  if (nameInput) nameInput.remove();
-  if (showNameCheckbox) showNameCheckbox.remove();
-  if (nameLabel) nameLabel.remove();
-
-  if (currentMember === 'letters') {
-    nameLabel = document.createElement('label');
-    nameLabel.textContent = "Name (optional, displayed handwritten):";
-    noteText.insertAdjacentElement('afterend', nameLabel);
-
-    nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.placeholder = 'Enter your name';
-    nameInput.style.width = '100%';
-    nameInput.style.marginTop = '6px';
-    nameInput.style.padding = '6px';
-    nameInput.style.borderRadius = '8px';
-    nameInput.style.border = '1px solid #ccc';
-    nameLabel.insertAdjacentElement('afterend', nameInput);
-
-    showNameCheckbox = document.createElement('input');
-    showNameCheckbox.type = 'checkbox';
-    showNameCheckbox.id = 'showNameToggle';
-    showNameCheckbox.style.marginTop = '8px';
-    showNameCheckbox.style.marginRight = '6px';
-
-    const cbLabel = document.createElement('label');
-    cbLabel.textContent = "Display my name under letter";
-    cbLabel.htmlFor = 'showNameToggle';
-    nameInput.insertAdjacentElement('afterend', showNameCheckbox);
-    showNameCheckbox.insertAdjacentElement('afterend', cbLabel);
-  }
-}
 
 // ----------------- Modal -----------------
 function setupModal() {
@@ -462,41 +416,8 @@ function setupModal() {
   previewText.textContent = '';
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
-
-  // 🧡 Detect letters vs notes for limits and extra fields
-noteText.addEventListener('input', e => {
-  previewText.textContent = e.target.value;
-
-  if (currentMember === 'letters') {
-    noteText.maxLength = 2000; // longer limit for letters
-    document.querySelector('#name-section').style.display = 'block';
-  } else {
-    noteText.maxLength = 300; // normal limit
-    document.querySelector('#name-section').style.display = 'none';
-  }
-});
-
-// Show/hide name input
-const displayNameCheckbox = document.getElementById('display-name-checkbox');
-const displayNameInput = document.getElementById('display-name');
-displayNameCheckbox.addEventListener('change', () => {
-  displayNameInput.style.display = displayNameCheckbox.checked ? 'block' : 'none';
-});
-
-// ✅ Adjust preview overlay for letters
-function setupModal() {
-  modalImg.src = currentImg;
-  previewText.textContent = '';
-  previewText.style.color = colorPicker.value || '#000';
-  noteText.value = '';
-
-  if (currentMember === 'letters') {
-    previewText.className = 'letter-text';
-  } else {
-    previewText.className = 'preview-text';
-  }
-
-  if (currentMode === 'simple') {
+  
+  if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
     memberSelectLabel.style.display = 'block';
@@ -510,38 +431,40 @@ function setupModal() {
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+if(currentMember === 'letters'){
+  previewText.className = 'letter-text';
+} else {
+  previewText.className = 'preview-text';
+}
+  const letterNameSection = $('#letter-name-section');
+const displayNameCheckbox = $('#display-name-checkbox');
+const displayNameInput = $('#display-name');
 
-// ✅ Save note or letter
-modalSubmit.addEventListener('click', async () => {
-  const text = noteText.value.trim();
-  if (!text) { alert('Write something!'); return; }
+if(currentMember === 'letters'){
+  noteText.maxLength = 2000;
+  letterNameSection.style.display = 'block';
+  displayNameCheckbox.checked = false;
+  displayNameInput.style.display = 'none';
+} else {
+  noteText.maxLength = 300; // regular notes
+  letterNameSection.style.display = 'none';
+}
 
-  const color = colorPicker.value || '#000';
-  const week = getCurrentWeek();
-  const member = currentMode === 'simple' ? memberSelect.value : currentMember;
-  const displayName = displayNameCheckbox.checked ? displayNameInput.value.trim() : '';
-
-  const noteData = {
-    img: currentImg,
-    text,
-    color,
-    likes: 0,
-    week,
-    timestamp: Date.now(),
-    creator: userId,
-    displayName: displayName || null
-  };
-
-  try {
-    await addDoc(collection(db, 'notes', member, 'memberNotes'), noteData);
-    closeModal();
-    alert(`Your ${member === 'letters' ? 'letter' : 'note'} has been submitted!`);
-  } catch (err) {
-    console.error(err);
-    alert('Error submitting.');
-  }
+displayNameCheckbox.addEventListener('change',()=>{
+  displayNameInput.style.display = displayNameCheckbox.checked ? 'block' : 'none';
 });
 
+
+const closeModal = () => {
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+noteText.addEventListener('input', e => previewText.textContent = e.target.value);
+colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
+modalClose.onclick = closeModal;
+modalCancel.onclick = closeModal;
+window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
 // ----------------- Open Modal -----------------
 const openModalForMember = (memberName, imgSrc) => {
@@ -558,12 +481,15 @@ const openModalForSimple = (imgSrc, defaultMember='shotaro') => {
   setupModal();
 };
 
-// ----------------- Render Pick Section -----------------
+// ----------------- Render Pick Section (Placeholders only) -----------------
 function renderPickSection() {
   members.forEach(member => {
     const wall = document.querySelector(`#${member.name}-selection .wall`);
     if (!wall) return;
+
     wall.innerHTML = '';
+
+    // 1️⃣ Placeholders
     for (let i = 1; i <= 7; i++) {
       const imgFile = `${member.name}${i}.png`;
       const note = document.createElement('div');
@@ -576,31 +502,47 @@ function renderPickSection() {
   });
 }
 
-// ----------------- Letters Placeholder Section -----------------
-function renderLettersSection() {
+
+
+
+
+
+   function renderLettersSection() {
   const wall = document.querySelector('#letters-selection .wall');
   if (!wall) return;
+
   wall.innerHTML = '';
+
+  // 9 placeholders for letters
   for (let i = 1; i <= 7; i++) {
-    const imgFile = `letter${i}.png`;
+    const imgFile = `letter${i}.png`; // Make sure these images exist
     const note = document.createElement('div');
     note.className = 'sticky-note';
-    note.style.border = `4px solid #FFA500`;
+    note.style.border = `4px solid #FFA500`; // gold border or pick any color
     note.innerHTML = `<img src="${imgFile}" alt="Letter placeholder ${i}">`;
-    note.onclick = () => openModalForMember('letters', imgFile);
+    note.onclick = () => {
+  currentMember = 'letters';
+  currentMode = 'member'; // or a separate 'letter' mode
+  currentImg = imgFile;
+  setupModal();
+};
     wall.appendChild(note);
   }
 }
 
-// ----------------- Realtime Fan Designs -----------------
+
+// ----------------- Fan Designs in Pick Section (Realtime) -----------------
 function setupPickFanDesignsRealtime() {
   members.forEach(member => {
     const wall = document.querySelector(`#${member.name}-selection .wall`);
     if (!wall) return;
+
     const designsCol = collection(db, 'designs', member.name, 'fanDesigns');
     onSnapshot(designsCol, snapshot => {
+      // Remove previous fan designs for this member
       const previousFanNotes = Array.from(wall.children).filter(el => el.dataset.fan === 'true');
       previousFanNotes.forEach(el => el.remove());
+
       snapshot.docs.forEach(docSnap => {
         const data = docSnap.data();
         const note = document.createElement('div');
@@ -615,45 +557,43 @@ function setupPickFanDesignsRealtime() {
   });
 }
 
-// ----------------- Render Member Wall -----------------
+// ----------------- Render Member Walls (with correct text color) -----------------
 function renderMemberWall(memberName){
   const wall = document.querySelector(`#${memberName}-wall`);
   if(!wall) return;
-  wall.innerHTML = '';
+  wall.innerHTML = ''; // clear existing notes
 
   const notesCol = collection(db, 'notes', memberName, 'memberNotes');
   onSnapshot(notesCol, snapshot => {
-    wall.innerHTML = '';
+    wall.innerHTML = ''; // clear before re-render
+
     snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
+
+      // Create sticky note container
       const noteDiv = document.createElement('div');
       noteDiv.className = 'sticky-note';
       noteDiv.style.border = `4px solid ${getMemberColor(memberName)}`;
 
+      // Create image element
       const imgEl = document.createElement('img');
       imgEl.src = data.img;
       imgEl.alt = "Note";
 
+      // Create label element with correct color
       const labelDiv = document.createElement('div');
       labelDiv.className = 'label';
       labelDiv.textContent = data.text;
-      labelDiv.style.color = data.color || '#000';
+      labelDiv.style.color = data.color || '#000'; // fallback to black
 
+      // Append image and label to note container
       noteDiv.appendChild(imgEl);
       noteDiv.appendChild(labelDiv);
 
-     if (memberName === 'letters') {
-  labelDiv.className = 'letter-text';
-} else {
-  labelDiv.className = 'label';
-}
-
-// After appending labelDiv:
-if (memberName === 'letters' && data.displayName) {
-  const nameDiv = document.createElement('div');
-  nameDiv.className = 'letter-name';
-  nameDiv.textContent = `— ${data.displayName}`;
-  noteDiv.appendChild(nameDiv);
+      // Append note to wall
+      wall.appendChild(noteDiv);
+    });
+  });
 }
 
 
@@ -662,6 +602,7 @@ function renderSimpleNotes(){
   const wall = $('#simple-note-wall');
   if(!wall) return;
   wall.innerHTML = '';
+
   ['red','orange','yellow','green','blue','indigo','violet'].forEach(color => {
     const imgFile = `${color}note.png`;
     const note = document.createElement('div');
@@ -680,6 +621,7 @@ submitDesignBtn.addEventListener('click', async ()=>{
   const file = designFileInput.files[0];
   const member = designMember.value;
   if(!file){ designMsg.textContent='Select a file!'; return; }
+
   const reader = new FileReader();
   reader.onload = async e=>{
     const imgData = e.target.result;
@@ -697,50 +639,99 @@ submitDesignBtn.addEventListener('click', async ()=>{
   reader.readAsDataURL(file);
 });
 
-// ----------------- Submit Note -----------------
+// ----------------- Manage Designs (Realtime) -----------------
+function setupManageDesignsRealtime() {
+  designContainer.innerHTML = '';
+  
+  members.forEach(member => {
+    const designsCol = collection(db,'designs',member.name,'fanDesigns');
+    onSnapshot(designsCol, snapshot => {
+      // Remove previous designs for this member
+      const memberDivs = Array.from(designContainer.children).filter(div => div.dataset.member === member.name);
+      memberDivs.forEach(div => div.remove());
+
+      snapshot.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        if(data.creator !== userId) return; // only own designs
+
+        const wrapper = document.createElement('div');
+        wrapper.dataset.member = member.name;
+        wrapper.style.display='inline-block';
+        wrapper.style.position='relative';
+        wrapper.style.margin='6px';
+
+        const img = document.createElement('img');
+        img.src = data.img;
+        img.style.width='100px';
+        img.style.border = `2px solid ${member.color}`;
+        img.style.borderRadius = '10px';
+        wrapper.appendChild(img);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent='Delete';
+        delBtn.style.position='absolute';
+        delBtn.style.top='6px';
+        delBtn.style.right='6px';
+        delBtn.style.background='red';
+        delBtn.style.color='#fff';
+        delBtn.style.border='none';
+        delBtn.style.padding='4px 6px';
+        delBtn.style.cursor='pointer';
+        delBtn.onclick = async () => {
+          if(!confirm('Delete this design?')) return;
+          await deleteDoc(doc(db,'designs',member.name,'fanDesigns',docSnap.id));
+        };
+        wrapper.appendChild(delBtn);
+
+        designContainer.appendChild(wrapper);
+      });
+    });
+  });
+}
+
+// ----------------- Submit Modal Note -----------------
 modalSubmit.addEventListener('click', async ()=>{
   const text = noteText.value.trim();
   if(!text){ alert('Write something!'); return; }
+
   const color = colorPicker.value || '#000';
   const week = getCurrentWeek();
   const member = currentMode==='simple'?memberSelect.value:currentMember;
 
   const noteData = {
-    img: currentImg,
-    text,
-    color,
-    likes: 0,
-    week,
-    timestamp: Date.now(),
-    creator: userId
-  };
+  img: currentImg,
+  text,
+  color,
+  likes: 0,
+  week,
+  timestamp: Date.now(),
+  creator: userId
+};
 
-  // Add name fields for letters
-  if (member === 'letters') {
-    noteData.name = nameInput?.value?.trim() || '';
-    noteData.showName = showNameCheckbox?.checked || false;
-  }
-
-  try{
+// If letters, add optional name
+if(currentMember === 'letters'){
+  noteData.showName = displayNameCheckbox.checked;
+  noteData.name = displayNameCheckbox.checked ? displayNameInput.value.trim() : '';
+}
+try{
     await addDoc(collection(db,'notes',member,'memberNotes'), noteData);
     closeModal();
-    alert(`Your ${member === 'letters' ? 'letter' : 'note'} has been submitted!`);
+    alert(`Your note has been submitted to ${member.toUpperCase()}'s wall!`);
   }catch(err){
     console.error(err);
-    alert('Error submitting.');
+    alert('Error submitting note.');
   }
 });
 
 // ----------------- Initialize -----------------
 renderPickSection();
-renderLettersSection();
 setupPickFanDesignsRealtime();
 renderSimpleNotes();
 members.forEach(m => renderMemberWall(m.name));
+setupManageDesignsRealtime();
+   // Add this line
+renderLettersSection();
 </script>
-
 
 </body>
 </html> 
-
-

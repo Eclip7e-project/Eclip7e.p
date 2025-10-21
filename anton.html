@@ -44,31 +44,109 @@ section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20p
 .top-note { border:5px solid gold; box-shadow:0 0 15px gold; }
 
 /* MODAL */
-#modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); justify-content:center; align-items:center; z-index:1000; overflow:auto; }
-#modal-content { position:relative; background:transparent; border-radius:15px; display:flex; gap:20px; padding:20px; }
+#modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.95);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-/* Image & Text Container */
-#modal-image-container { position:relative; width:250px; height:250px; flex-shrink:0; }
-#modal-img { width:250px; height:250px; object-fit:cover; border-radius:15px; }
-#modal-text { position:absolute; top:10px; left:10px; right:10px; bottom:10px; color:black; font-size:0.75rem; white-space:pre-wrap; pointer-events:none; text-shadow:1px 1px 2px white; }
+#modal-content {
+  position: relative;
+  background: black;
+  border-radius: 15px;
+  width: 95vw; max-width: 1200px;
+  height: 95vh; max-height: 95vh;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  overflow: hidden;
+  flex-direction: row;
+}
 
-/* Buttons under note */
-#modal-buttons { margin-top:5px; display:flex; justify-content:center; gap:5px; }
-#modal-like { padding:3px 6px; cursor:pointer; background:gold; border:none; border-radius:5px; color:black; font-weight:bold; }
-#modal-delete { display:none; background:red; color:white; border:none; border-radius:5px; padding:3px 6px; cursor:pointer; }
+#modal-image-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+}
 
-/* Comments */
-#modal-comments { background:#111; border-radius:10px; padding:10px; flex:1; max-height:250px; overflow:auto; display:flex; flex-direction:column; }
-#modal-comments h3 { margin-top:0; color:gold; text-align:center; }
+#modal-img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 15px;
+  object-fit: contain;
+}
+
+#modal-text {
+  margin-top: 10px;
+  color: black;
+  font-size: 1.1rem;
+  text-align: center;
+  white-space: pre-wrap;
+  pointer-events: none;
+  text-shadow: 1px 1px 3px white;
+}
+
+#modal-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#modal-like, #modal-delete {
+  padding: 7px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+#modal-like { background: gold; color: black; }
+#modal-delete { background: red; color: white; display: none; }
+
+#modal-comments {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  border-radius: 10px;
+  padding: 10px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#modal-comments h3 { margin-top:0; color: gold; text-align:center; }
 .comment { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; background:#222; padding:5px; border-radius:5px; flex-wrap:wrap; }
 .comment .username { font-weight:bold; color:#FFD700; margin-right:5px; }
-.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.8rem; }
-.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:2px 5px; font-size:0.7rem; }
+.comment .text { flex:1; white-space:pre-wrap; word-break:break-word; margin-top:2px; font-size:0.85rem; }
+.comment button { margin-left:5px; background:red; color:white; border:none; border-radius:5px; cursor:pointer; padding:3px 6px; font-size:0.7rem; }
 
 #comment-input { width:100%; resize:none; border-radius:5px; border:none; padding:5px; margin-top:5px; }
-#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background:gold; color:black; font-weight:bold; cursor:pointer; }
+#submit-comment { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; background: gold; color:black; font-weight:bold; cursor:pointer; }
 
 #modal-close { position:absolute; top:10px; right:10px; cursor:pointer; font-size:1.2rem; font-weight:bold; background:red; color:white; border:none; border-radius:5px; padding:3px 7px; z-index:1001; }
+
+/* Responsive for mobile */
+@media(max-width:768px){
+  #modal-content {
+    flex-direction: column;
+    width: 95vw; height: 95vh;
+    padding: 10px;
+  }
+  #modal-img { max-height: 50vh; }
+  #modal-text { font-size: 1rem; }
+  #modal-comments { max-height: 35vh; margin-top: 10px; }
+  #modal-buttons { margin-top:10px; justify-content:center; gap:8px; }
+}
 
 /* FOOTER */
 footer { padding:30px 0; border-top:2px solid gold; margin-top:50px; }
@@ -250,3 +328,4 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
+

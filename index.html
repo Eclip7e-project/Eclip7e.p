@@ -337,11 +337,14 @@ Thank you for helping us celebrate and support RII7E! 🧡
 
 
 <script type="module">
+  document.addEventListener('DOMContentLoaded', () => {
+  const modalRight = document.querySelector('.modal-right'); // safe now
+  // All your existing JS code goes here
+});
 // ----------------- Firebase SDK -----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-const modalRight = document.querySelector('.modal-right'); // needed to append inputs
 // ----------------- Firebase Setup -----------------
 const firebaseConfig = {
   apiKey: "AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
@@ -730,6 +733,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

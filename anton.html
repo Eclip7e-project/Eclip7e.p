@@ -376,52 +376,55 @@ function renderNotes(notes){
 
 async function openModal(note){
   currentModalNote = note;
-  const docRef = doc(db,'notes','anton','memberNotes',note.id);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
-  
-  modalImageContainer.innerHTML='';
 
+  // Clear modal content
+  const imgContainer = document.getElementById('modal-image-container');
+  imgContainer.innerHTML = '';
+
+  // Clone the note exactly as it appears
   const noteDiv = document.createElement('div');
-  noteDiv.id='modal-note';
+  noteDiv.className = 'sticky-note';
+  noteDiv.style.width = 'auto'; // allow modal scaling
+  noteDiv.style.height = 'auto';
+  noteDiv.style.maxWidth = '80vw';
+  noteDiv.style.maxHeight = '80vh';
+  noteDiv.style.position = 'relative';
 
   const imgEl = document.createElement('img');
-  imgEl.src = currentModalNote.img;
+  imgEl.src = note.img;
+  imgEl.alt = 'Note';
+  imgEl.style.width = '100%';
+  imgEl.style.height = '100%';
+  imgEl.style.objectFit = 'cover';
 
   const textDiv = document.createElement('div');
-  textDiv.className='text';
-  textDiv.textContent = currentModalNote.text;
-  textDiv.style.color = currentModalNote.color||'black';
+  textDiv.className = 'text';
+  textDiv.textContent = note.text;
+  textDiv.style.color = note.color || 'black';
+  textDiv.style.top = note.top || '10px';
+  textDiv.style.left = note.left || '10px';
+  textDiv.style.right = note.right || '10px';
+  textDiv.style.bottom = note.bottom || '10px';
+  textDiv.style.fontSize = note.fontSize || '0.75rem';
+  textDiv.style.whiteSpace = 'pre-wrap';
 
   noteDiv.appendChild(imgEl);
   noteDiv.appendChild(textDiv);
-  modalImageContainer.appendChild(noteDiv);
+  imgContainer.appendChild(noteDiv);
 
-  // Buttons
-  const buttonsDiv = document.createElement('div');
-  buttonsDiv.id='modal-buttons';
-  const likeBtn = document.createElement('button');
-  likeBtn.id='modal-like';
-  likeBtn.textContent=`❤ ${currentModalNote.likes||0}`;
-  likeBtn.onclick = async ()=>{
-    let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
-    if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-    await updateDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id), { likes:(currentModalNote.likes||0)+1 });
-    currentModalNote.likes++;
-    likeBtn.textContent=`❤ ${currentModalNote.likes}`;
-    liked.push(currentModalNote.id); localStorage.setItem('likedNotes', JSON.stringify(liked));
-  };
+  // Like & delete buttons under note
+  const buttonsDiv = document.getElementById('modal-buttons');
+  buttonsDiv.style.display = 'flex';
+  buttonsDiv.style.justifyContent = 'center';
+  modalLike.textContent = `❤ ${note.likes || 0}`;
+  modalDelete.style.display = (note.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
+  buttonsDiv.appendChild(modalLike);
+  buttonsDiv.appendChild(modalDelete);
 
-  const deleteBtn = document.createElement('button');
-  deleteBtn.id='modal-delete';
-  deleteBtn.textContent='Delete';
-  deleteBtn.style.display=(currentModalNote.creator===userId)?'inline-block':'none';
-  deleteBtn.onclick=async ()=>{
-    if(confirm("Delete your note?")) {
-      await deleteDoc(doc(db,'notes','anton','memberNotes',currentModalNote.id));
-      modal.style.display='none';
-    }
-  };
+  modal.style.display = 'flex';
+  loadComments();
+}
+
 
   buttonsDiv.appendChild(likeBtn);
   buttonsDiv.appendChild(deleteBtn);
@@ -480,4 +483,5 @@ onSnapshot(notesCol, snapshot=>{
 </script>
 </body>
 </html>
+
 

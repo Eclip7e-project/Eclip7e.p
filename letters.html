@@ -144,7 +144,9 @@ footer a:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+  getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, addDoc, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -160,10 +162,11 @@ const db = getFirestore();
 const auth = getAuth();
 signInAnonymously(auth).catch(console.error);
 
-// Username & userId
+// Username & userId (keeps existing behavior)
 let username = localStorage.getItem('username');
-if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username);}
-let userId = localStorage.getItem('userId') || (localStorage.setItem('userId', crypto.randomUUID()), localStorage.getItem('userId'));
+if(!username){ username = prompt("Choose a username:") || "Anonymous"; localStorage.setItem('username', username); }
+let userId = localStorage.getItem('userId');
+if(!userId){ userId = crypto.randomUUID(); localStorage.setItem('userId', userId); }
 
 // DOM
 const wall = document.getElementById('letters-wall');
@@ -180,126 +183,166 @@ const submitComment = document.getElementById('submit-comment');
 let currentModalNote = null;
 let commentsUnsubscribe = null;
 
-// ----------------- Render Notes -----------------
+// -------- Render letters feed (correct path) --------
 function renderNotes(notes){
-  wall.innerHTML='';
-  notes.forEach(n=>{
-    const div=document.createElement('div');
-    div.className='sticky-note';
+  wall.innerHTML = '';
+  notes.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'sticky-note';
 
-    const imgEl=document.createElement('img');
-    imgEl.src=n.img; imgEl.alt='Note';
+    const imgEl = document.createElement('img');
+    imgEl.src = n.img || 'https://via.placeholder.com/200x300?text=Letter';
+    imgEl.alt = 'Letter';
 
-    const textDiv=document.createElement('div');
-    textDiv.className='text';
-    textDiv.textContent = n.text;
+    const textDiv = document.createElement('div');
+    textDiv.className = 'text';
+    textDiv.textContent = n.text || '';
     textDiv.style.color = n.color || 'white';
 
     div.appendChild(imgEl);
     div.appendChild(textDiv);
-    div.onclick = ()=>openModal(n);
+    div.onclick = () => openModal(n);
 
     wall.appendChild(div);
   });
 }
 
-// ----------------- Modal -----------------
-async function openModal(note){
-  currentModalNote = note;
-  const docRef = doc(db,'letters',note.id);
-const docSnap = await getDoc(docRef);
-if(docSnap.exists()) currentModalNote = {id: docSnap.id, ...docSnap.data()};
-  modalImg.src = currentModalNote.img;
-  modalText.textContent = currentModalNote.text;
+// -------- Open modal (read the letter doc from letters/{id}) --------
+async function openModal(letter){
+  currentModalNote = letter;
+
+  try {
+    const docRef = doc(db, 'letters', letter.id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) currentModalNote = { id: docSnap.id, ...docSnap.data() };
+  } catch (err) {
+    console.error("Failed to load letter doc:", err);
+  }
+
+  modalImg.src = currentModalNote.img || 'https://via.placeholder.com/400x600?text=Letter';
+  modalText.textContent = currentModalNote.text || '';
   modalText.style.color = currentModalNote.color || 'white';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
+
+  // show delete only to creator or admin
   modalDelete.style.display = (currentModalNote.creator === userId || userId === "cris_owner_001") ? 'inline-block' : 'none';
   modal.style.display = 'flex';
 
-  loadComments();
+  loadComments(); // subscribe to comments for this specific letter
 }
 
-// ----------------- Close modal -----------------
-modalClose.onclick = e=>{ e.stopPropagation(); modal.style.display='none'; }
-modal.onclick = ()=> modal.style.display='none';
-document.getElementById('modal-content').onclick = e=> e.stopPropagation();
+// -------- Close modal handlers --------
+modalClose.onclick = e => { e.stopPropagation(); modal.style.display = 'none'; if (commentsUnsubscribe) commentsUnsubscribe(); };
+modal.onclick = () => { modal.style.display = 'none'; if (commentsUnsubscribe) commentsUnsubscribe(); };
+document.getElementById('modal-content').onclick = e => e.stopPropagation();
 
-// ----------------- Likes -----------------
+// -------- Likes (local one-per-browser) --------
 modalLike.onclick = async () => {
-  if(!currentModalNote) return;
-  let liked = JSON.parse(localStorage.getItem('likedNotes')||'[]');
-  if(liked.includes(currentModalNote.id)){ alert("Already liked!"); return; }
-  await updateDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id),{ likes:(currentModalNote.likes||0)+1 });
-  currentModalNote.likes = (currentModalNote.likes||0)+1;
-  modalLike.textContent = `❤ ${currentModalNote.likes}`;
-  liked.push(currentModalNote.id);
-  localStorage.setItem('likedNotes', JSON.stringify(liked));
+  if (!currentModalNote) return;
+  let liked = JSON.parse(localStorage.getItem('likedLetters') || '[]');
+  if (liked.includes(currentModalNote.id)) { alert("Already liked!"); return; }
+
+  try {
+    const letterRef = doc(db, 'letters', currentModalNote.id);
+    await updateDoc(letterRef, { likes: (currentModalNote.likes || 0) + 1 });
+    currentModalNote.likes = (currentModalNote.likes || 0) + 1;
+    modalLike.textContent = `❤ ${currentModalNote.likes}`;
+    liked.push(currentModalNote.id);
+    localStorage.setItem('likedLetters', JSON.stringify(liked));
+  } catch (err) {
+    console.error("Failed to update likes:", err);
+    alert("Failed to like (check rules).");
+  }
 };
 
-// ----------------- Delete note -----------------
+// -------- Delete letter (creator or admin) --------
 modalDelete.onclick = async () => {
   if(!currentModalNote) return;
-  if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes','letters','memberNotes',currentModalNote.id));
-  modal.style.display='none';
+  if(!confirm("Delete this letter?")) return;
+  try {
+    await deleteDoc(doc(db, 'letters', currentModalNote.id));
+    modal.style.display = 'none';
+    if (commentsUnsubscribe) commentsUnsubscribe();
+  } catch (err) {
+    console.error("Failed to delete letter:", err);
+    alert("Failed to delete (check rules).");
+  }
 };
 
-// ----------------- Firestore real-time notes -----------------
-// For listing letters
-const lettersCol = collection(db,'letters');
-onSnapshot(lettersCol, snapshot=>{
-  const letters = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-  renderNotes(letters);
+// -------- Realtime: listen letters collection --------
+const lettersCol = collection(db, 'letters');
+onSnapshot(lettersCol, snapshot => {
+  const notes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  // sort by timestamp if exists, newest first (optional)
+  notes.sort((a,b)=> (b.timestamp?.toMillis?.() || b.timestamp || 0) - (a.timestamp?.toMillis?.() || a.timestamp || 0));
+  renderNotes(notes);
+}, err => {
+  console.error("Letters onSnapshot error:", err);
 });
 
-// ----------------- Comments -----------------
-let commentsUnsubscribe = null;
-
+// -------- Comments: subscribe to letters/{id}/comments --------
 async function loadComments() {
   if (!currentModalNote) return;
-  if (commentsUnsubscribe) commentsUnsubscribe(); // unsubscribe previous listener
-  commentsList.innerHTML = "";
+  if (commentsUnsubscribe) commentsUnsubscribe();
 
-  // Correct path: letters -> letterDocId -> comments
+  commentsList.innerHTML = '';
+
   const commentsCol = collection(db, 'letters', currentModalNote.id, 'comments');
   const q = query(commentsCol, orderBy('timestamp', 'asc'));
 
   commentsUnsubscribe = onSnapshot(q, (snapshot) => {
-    commentsList.innerHTML = "";
-    snapshot.forEach((docSnap) => {
+    commentsList.innerHTML = '';
+
+    snapshot.docs.forEach(docSnap => {
       const data = docSnap.data();
+      const commentId = docSnap.id;
+
       const div = document.createElement('div');
       div.className = 'comment';
-      div.innerHTML = `
-        <span class="username">${data.username || "Anonymous"}:</span>
-        <span class="text">${data.text}</span>
-      `;
 
-      const isOwner = (userId === "cris_owner_001"); 
+      const usernameSpan = document.createElement('span');
+      usernameSpan.className = 'username';
+      usernameSpan.textContent = (data.username || "Anonymous") + ':';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'text';
+      textSpan.textContent = data.text || '';
+
+      div.appendChild(usernameSpan);
+      div.appendChild(textSpan);
+
+      // controls: edit/delete if creator or admin
+      const isOwner = (userId === "cris_owner_001");
       const isCreator = (data.creator === userId);
 
       if (isOwner || isCreator) {
         const btnWrap = document.createElement('div');
-        btnWrap.style.display = "flex";
-        btnWrap.style.gap = "4px";
-        btnWrap.style.marginTop = "4px";
+        btnWrap.style.display = 'flex';
+        btnWrap.style.gap = '6px';
+        btnWrap.style.marginTop = '4px';
 
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Edit';
         editBtn.onclick = async () => {
           const newText = prompt('Edit your comment:', data.text);
           if (!newText || newText.trim() === "") return;
-          await updateDoc(
-            doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id),
-            { text: newText.trim(), edited: true }
-          );
+          try {
+            await updateDoc(doc(db, 'letters', currentModalNote.id, 'comments', commentId), { text: newText.trim(), edited: true });
+          } catch (err) {
+            console.error("Failed to edit comment:", err);
+            alert("Failed to edit (check rules).");
+          }
         };
 
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.onclick = async () => {
-          if (confirm('Delete this comment?')) {
-            await deleteDoc(doc(db, 'letters', currentModalNote.id, 'comments', docSnap.id));
+          if (!confirm('Delete this comment?')) return;
+          try {
+            await deleteDoc(doc(db, 'letters', currentModalNote.id, 'comments', commentId));
+          } catch (err) {
+            console.error("Failed to delete comment:", err);
+            alert("Failed to delete (check rules).");
           }
         };
 
@@ -310,10 +353,15 @@ async function loadComments() {
 
       commentsList.appendChild(div);
     });
+
+    // scroll to bottom
+    commentsList.scrollTop = commentsList.scrollHeight;
+  }, err => {
+    console.error("Comments onSnapshot error:", err);
   });
 }
 
-// ----------------- Submit Comment -----------------
+// -------- Submit comment --------
 submitComment.onclick = async () => {
   const text = commentInput.value.trim();
   if (!text || !currentModalNote) return;
@@ -326,14 +374,15 @@ submitComment.onclick = async () => {
       creator: userId,
       timestamp: serverTimestamp()
     });
-    commentInput.value = "";
+    commentInput.value = '';
   } catch (err) {
     console.error("Error adding comment:", err);
-    alert("Failed to send comment — check Firestore permissions.");
+    alert("Failed to send comment — check Firestore rules or console.");
   }
 };
-
 </script>
+
 </body>
 </html>
+
 

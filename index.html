@@ -317,7 +317,8 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <label>Text color</label>
         <input id="color-picker" type="color" value="#000000">
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
-        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
+       <textarea id="note-text" placeholder="Write your message"></textarea>
+<small id="char-count" style="display:block; text-align:right; color:#888; margin-top:2px;">0 / 300</small>
         <!-- Inside modal-right -->
 <div id="letter-name-container" style="display:none; margin-top:8px;">
   <label for="letter-name">Your Name (optional)</label>
@@ -407,6 +408,13 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
+  // Set dynamic placeholder & limit
+  if(currentMember === 'letters'){
+    noteText.placeholder = 'Write your letter (max 2000 chars)';
+  } else {
+    noteText.placeholder = 'Write your message (max 300 chars)';
+  }
+
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -420,7 +428,11 @@ function setupModal() {
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  
+  // Reset char count
+  charCount.textContent = `0 / ${currentMember === 'letters' ? 2000 : 300}`;
 }
+
 
 const closeModal = () => {
   modal.style.display = 'none';
@@ -690,6 +702,17 @@ modalSubmit.addEventListener('click', async ()=>{
   }
 });
 
+const charCount = $('#char-count');
+
+noteText.addEventListener('input', e => {
+  // Determine limit based on current member
+  const limit = currentMember === 'letters' ? 2000 : 300;
+  if(e.target.value.length > limit){
+    e.target.value = e.target.value.slice(0, limit);
+  }
+  charCount.textContent = `${e.target.value.length} / ${limit}`;
+  previewText.textContent = e.target.value;
+});
 
 // ----------------- Initialize -----------------
 renderPickSection();
@@ -703,5 +726,6 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 

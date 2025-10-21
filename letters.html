@@ -298,13 +298,7 @@ submitComment.onclick = async () => {
   if (!text || !currentModalNote) return;
 
   const commentsCol = collection(db, 'notes', 'letters', 'memberNotes', currentModalNote.id, 'comments');
-  await addDoc(commentsCol, {
-  text,
-  username,
-  creator: userId,
-  timestamp: serverTimestamp()
-});
-commentInput.value = "";
+  await addDoc(commentsCol, { text, username, creator: userId, timestamp: serverTimestamp() }); commentInput.value = "";
 };
 
 
@@ -341,6 +335,7 @@ modalDelete.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

@@ -91,16 +91,22 @@ footer a:hover { text-decoration:underline; }
 
 /* ----------------- MOBILE RESPONSIVENESS ----------------- */
 @media (max-width: 768px) {
+
+  /* Modal container */
   #modal-content {
     flex-direction: column;
     width: 95%;
-    max-height: 90vh;
+    height: 90vh;
+    overflow-y: auto; /* modal itself scrolls */
     padding: 10px;
   }
 
+  /* Image container */
   #modal-image-container {
     width: 100%;
     flex: none;
+    display: flex;
+    flex-direction: column;
     align-items: center;
   }
 
@@ -121,18 +127,31 @@ footer a:hover { text-decoration:underline; }
     text-shadow: 1px 1px 2px white;
   }
 
+  /* Buttons under image */
+  #modal-buttons {
+    margin-top: 10px;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  #modal-like, #modal-delete {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+  }
+
+  /* Comments section */
   #modal-comments {
     width: 100%;
-    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     gap: 5px;
-    max-height: 35vh; /* adjust as needed */
-    overflow-y: auto; /* scroll when overflowing */
     margin-top: 15px;
     padding: 0 10px;
+    overflow: visible; /* modal scroll handles everything */
   }
 
+  /* Input and send button */
   #comment-input {
     width: 100%;
     resize: none;
@@ -141,7 +160,6 @@ footer a:hover { text-decoration:underline; }
     padding: 5px;
     font-size: 0.9rem;
     margin-bottom: 5px;
-    flex: none;
   }
 
   #submit-comment {
@@ -154,30 +172,19 @@ footer a:hover { text-decoration:underline; }
     font-weight: bold;
     cursor: pointer;
     font-size: 0.9rem;
-    flex: none;
   }
 
+  /* Comments display */
   #comments-list {
     display: flex;
-    flex-direction: column-reverse; /* newest at top */
-    overflow-y: auto;
+    flex-direction: column-reverse; /* newest comments appear at top */
     gap: 5px;
-  }
-
-  #modal-buttons {
-    margin-top: 10px;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  #modal-like, #modal-delete {
-    font-size: 0.9rem;
-    padding: 6px 12px;
   }
 
   .comment .text {
     font-size: 0.9rem;
   }
+
 }
 </style>
 </head>
@@ -206,12 +213,11 @@ footer a:hover { text-decoration:underline; }
         <button id="modal-delete">Delete</button>
       </div>
     </div>
-    <div id="modal-comments">
-      <h3>Comments</h3>
-      <div id="comments-list"></div>
-      <textarea id="comment-input" rows="3" placeholder="Write a comment..."></textarea>
-      <button id="submit-comment">Send</button>
-    </div>
+   <div id="modal-comments">
+  <textarea id="comment-input" rows="3" placeholder="Write a comment..."></textarea>
+  <button id="submit-comment">Send</button>
+  <div id="comments-list"></div>
+</div>
   </div>
 </div>
 
@@ -419,6 +425,7 @@ modalDelete.onclick = async () => {
 </script>
 </body>
 </html>
+
 
 
 

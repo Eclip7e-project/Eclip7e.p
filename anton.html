@@ -26,30 +26,18 @@ header img.banner { width:100%; height:auto; object-fit:contain; border-bottom:2
 
 /* WALL */
 section.wall { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:20px; padding:40px; }
-.sticky-note { width:200px; height:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; display:flex; flex-direction:column; }
-.sticky-note img { width:100%; height:100%; object-fit:cover; display:block; }
-.sticky-note .text {
-  position:absolute;
-  top:10px; left:10px; right:10px;
-  font-size:0.75rem;
-  white-space:pre-wrap; overflow-wrap:break-word;
-  pointer-events:none;
-}
+.sticky-note { width:200px; position:relative; cursor:pointer; border-radius:15px; overflow:hidden; display:flex; flex-direction:column; }
+.sticky-note img { width:100%; height:200px; object-fit:cover; display:block; }
+.note-text { padding:5px; font-size:0.8rem; white-space:pre-wrap; word-wrap:break-word; }
 
 /* COMMENTS */
 .comment-list {
   display:flex;
   flex-direction:column;
   gap:5px;
-  position:absolute;
-  top:10px;
-  right:10px;
-  max-width:80px;
-  font-size:0.65rem;
-  color:white;
-  text-align:left;
+  margin-top:5px;
 }
-.comment-item { display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); border-radius:5px; padding:2px 5px; }
+.comment-item { display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); border-radius:5px; padding:2px 5px; font-size:0.65rem; }
 .comment-delete { cursor:pointer; color:red; margin-left:5px; display:none; }
 
 /* Highlight top note */
@@ -73,7 +61,8 @@ footer a:hover { text-decoration:underline; }
 /* DESKTOP: comments beside note */
 @media(min-width:768px){
   .sticky-note { flex-direction:row; }
-  .comment-list { position:static; max-width:80px; margin-left:5px; }
+  .note-text { flex:1; }
+  .comment-list { margin-top:0; margin-left:5px; flex-shrink:0; }
 }
 </style>
 </head>
@@ -149,6 +138,7 @@ async function openModal(note){
 
   modalImg.src = currentModalNote.img;
   modalText.textContent = currentModalNote.text;
+  modalText.style.color = currentModalNote.color || 'black';
   modalLike.textContent = `❤ ${currentModalNote.likes || 0}`;
   modalDelete.style.display = (currentModalNote.creator === userId) ? 'inline-block' : 'none';
   modal.style.display = 'flex';
@@ -179,7 +169,7 @@ modalDelete.onclick = async () => {
   modal.style.display='none';
 };
 
-// Render notes with comments beside
+// Render notes with proper text color and comments
 function renderNotes(notes){
   wall.innerHTML='';
   let maxLikes=-1, topNoteId=null;
@@ -203,9 +193,9 @@ function renderNotes(notes){
     imgEl.src=n.img; imgEl.alt='Note';
 
     const textDiv=document.createElement('div');
-    textDiv.className='text';
-    textDiv.textContent=n.text;
-    textDiv.style.color=n.color||'black';
+    textDiv.className='note-text';
+    textDiv.textContent = n.text;
+    textDiv.style.color = n.color || 'black';
 
     // Comment list
     const commentList=document.createElement('div');
@@ -213,7 +203,7 @@ function renderNotes(notes){
     if(n.comments) n.comments.forEach(c=>{
       const item=document.createElement('div');
       item.className='comment-item';
-      item.textContent=c.text;
+      item.textContent = c.text;
 
       const del=document.createElement('span');
       del.className='comment-delete';
@@ -236,7 +226,7 @@ function renderNotes(notes){
 
     div.onclick = ()=>openModal(n);
 
-    // Right-click download with rounded corners
+    // Right-click download
     div.addEventListener('contextmenu', async e=>{
       e.preventDefault();
       const canvas = await html2canvas(div, { backgroundColor:null, useCORS:true });

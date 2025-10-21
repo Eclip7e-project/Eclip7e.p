@@ -29,6 +29,29 @@
   font-weight: bold;
 }
 
+<!-- Add this inside <head> -->
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+.letter-text {
+  position: absolute;
+  top: 2.3cm;
+  left: 4.6cm;
+  right: 4.3cm;
+  color: black;
+  font-size: 0.5rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+.letter-name {
+  text-align: center;
+  font-family: 'Pacifico', cursive;
+  color: #222;
+  font-size: 1rem;
+  margin-top: 6px;
+}
 
      
      :root {
@@ -300,28 +323,38 @@ Thank you for helping us celebrate and support RII7E! 🧡
           <div class="preview-text" id="preview-text"></div>
         </div>
       </div>
-      <div class="modal-right">
-        <h3 id="modal-member">Member</h3>
-        <label id="member-select-label" style="display:none">Choose member (for plain notes)</label>
-        <select id="member-select" style="display:none; width:100%; padding:8px; border-radius:8px; margin-bottom:8px;">
-          <option value="shotaro">SHOTARO</option>
-          <option value="eunseok">EUNSEOK</option>
-          <option value="sungchan">SUNGCHAN</option>
-          <option value="wonbin">WONBIN</option>
-          <option value="seunghan">SEUNGHAN</option>
-          <option value="sohee">SOHEE</option>
-          <option value="anton">ANTON</option>
-          <option value="rii7e">RII7E</option>
-          <option value="brii7e">BRII7E</option>
-        </select>
-        <label>Text color</label>
-        <input id="color-picker" type="color" value="#000000">
-        <label style="margin-top:10px">Write your message (max 300 chars)</label>
-        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
-        <div class="modal-actions">
-          <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
-          <button class="btn btn-submit" id="modal-submit">Submit</button>
-        </div>
+     <div class="modal-right">
+  <h3 id="modal-member">Member</h3>
+  <label id="member-select-label" style="display:none">Choose member (for plain notes)</label>
+  <select id="member-select" style="display:none; width:100%; padding:8px; border-radius:8px; margin-bottom:8px;">
+    <option value="shotaro">SHOTARO</option>
+    <option value="eunseok">EUNSEOK</option>
+    <option value="sungchan">SUNGCHAN</option>
+    <option value="wonbin">WONBIN</option>
+    <option value="seunghan">SEUNGHAN</option>
+    <option value="sohee">SOHEE</option>
+    <option value="anton">ANTON</option>
+    <option value="rii7e">RII7E</option>
+    <option value="brii7e">BRII7E</option>
+    <option value="letters">LETTERS</option>
+  </select>
+
+  <label>Text color</label>
+  <input id="color-picker" type="color" value="#000000">
+
+  <label style="margin-top:10px">Write your message</label>
+  <textarea id="note-text" placeholder="Write your message..."></textarea>
+
+  <div id="name-section" style="margin-top:10px; display:none;">
+    <input type="checkbox" id="display-name-checkbox">
+    <label for="display-name-checkbox">Display my name under this letter</label>
+    <input type="text" id="display-name" placeholder="Enter your name" style="display:none; width:100%; margin-top:6px; padding:6px; border-radius:8px; border:1px solid #ccc;">
+  </div>
+
+  <div class="modal-actions">
+    <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
+    <button class="btn btn-submit" id="modal-submit">Submit</button>
+  </div>
       </div>
     </div>
   </div>
@@ -430,10 +463,40 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
-  // Letters get 2000 chars limit, others 300
-  noteText.maxLength = currentMember === 'letters' ? 2000 : 300;
+  // 🧡 Detect letters vs notes for limits and extra fields
+noteText.addEventListener('input', e => {
+  previewText.textContent = e.target.value;
 
-  if(currentMode === 'simple'){
+  if (currentMember === 'letters') {
+    noteText.maxLength = 2000; // longer limit for letters
+    document.querySelector('#name-section').style.display = 'block';
+  } else {
+    noteText.maxLength = 300; // normal limit
+    document.querySelector('#name-section').style.display = 'none';
+  }
+});
+
+// Show/hide name input
+const displayNameCheckbox = document.getElementById('display-name-checkbox');
+const displayNameInput = document.getElementById('display-name');
+displayNameCheckbox.addEventListener('change', () => {
+  displayNameInput.style.display = displayNameCheckbox.checked ? 'block' : 'none';
+});
+
+// ✅ Adjust preview overlay for letters
+function setupModal() {
+  modalImg.src = currentImg;
+  previewText.textContent = '';
+  previewText.style.color = colorPicker.value || '#000';
+  noteText.value = '';
+
+  if (currentMember === 'letters') {
+    previewText.className = 'letter-text';
+  } else {
+    previewText.className = 'preview-text';
+  }
+
+  if (currentMode === 'simple') {
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
     memberSelectLabel.style.display = 'block';
@@ -444,21 +507,41 @@ function setupModal() {
     memberSelectLabel.style.display = 'none';
   }
 
-  addNameOptionIfLetters(); // add name inputs for letters
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
-const closeModal = () => {
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-};
+// ✅ Save note or letter
+modalSubmit.addEventListener('click', async () => {
+  const text = noteText.value.trim();
+  if (!text) { alert('Write something!'); return; }
 
-noteText.addEventListener('input', e => previewText.textContent = e.target.value);
-colorPicker.addEventListener('input', e => previewText.style.color = e.target.value);
-modalClose.onclick = closeModal;
-modalCancel.onclick = closeModal;
-window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+  const color = colorPicker.value || '#000';
+  const week = getCurrentWeek();
+  const member = currentMode === 'simple' ? memberSelect.value : currentMember;
+  const displayName = displayNameCheckbox.checked ? displayNameInput.value.trim() : '';
+
+  const noteData = {
+    img: currentImg,
+    text,
+    color,
+    likes: 0,
+    week,
+    timestamp: Date.now(),
+    creator: userId,
+    displayName: displayName || null
+  };
+
+  try {
+    await addDoc(collection(db, 'notes', member, 'memberNotes'), noteData);
+    closeModal();
+    alert(`Your ${member === 'letters' ? 'letter' : 'note'} has been submitted!`);
+  } catch (err) {
+    console.error(err);
+    alert('Error submitting.');
+  }
+});
+
 
 // ----------------- Open Modal -----------------
 const openModalForMember = (memberName, imgSrc) => {
@@ -559,21 +642,20 @@ function renderMemberWall(memberName){
       noteDiv.appendChild(imgEl);
       noteDiv.appendChild(labelDiv);
 
-      // ✍️ Add handwritten name if displayName true
-      if (data.showName && data.name) {
-        const nameEl = document.createElement('div');
-        nameEl.textContent = `— ${data.name}`;
-        nameEl.style.fontFamily = '"Brush Script MT", cursive';
-        nameEl.style.fontSize = '1rem';
-        nameEl.style.color = '#222';
-        nameEl.style.marginTop = '6px';
-        noteDiv.appendChild(nameEl);
-      }
-
-      wall.appendChild(noteDiv);
-    });
-  });
+     if (memberName === 'letters') {
+  labelDiv.className = 'letter-text';
+} else {
+  labelDiv.className = 'label';
 }
+
+// After appending labelDiv:
+if (memberName === 'letters' && data.displayName) {
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'letter-name';
+  nameDiv.textContent = `— ${data.displayName}`;
+  noteDiv.appendChild(nameDiv);
+}
+
 
 // ----------------- Simple Notes -----------------
 function renderSimpleNotes(){
@@ -660,4 +742,5 @@ members.forEach(m => renderMemberWall(m.name));
 
 </body>
 </html> 
+
 

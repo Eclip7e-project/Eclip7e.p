@@ -292,12 +292,7 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
        <textarea id="note-text" placeholder="Write your message"></textarea>
 <small id="char-count" style="display:block; text-align:right; color:#888; margin-top:2px;">0 / 300</small>
-        <!-- Inside modal-right -->
-<div id="letter-name-container" style="display:none; margin-top:8px;">
-  <label for="letter-name">Your Name (optional)</label>
-  <input type="text" id="letter-name" placeholder="Enter your name" style="width:100%;padding:6px;border-radius:6px;border:1px solid #ccc;">
-  <label><input type="checkbox" id="letter-anon" checked> Stay anonymous</label>
-</div>
+      
         <div class="modal-actions">
           <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
           <button class="btn btn-submit" id="modal-submit">Submit</button>
@@ -307,7 +302,6 @@ Thank you for helping us celebrate and support RII7E! 🧡
   </div>
 </div>
 <script type="module">
-  const modalRight = document.querySelector('.modal-right'); 
 // ----------------- Firebase SDK -----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
@@ -497,17 +491,6 @@ function renderMemberWall(memberName){
       labelDiv.style.color = data.color || '#000'; // fallback to black
       noteDiv.appendChild(imgEl);
       noteDiv.appendChild(labelDiv);
-      // ✅ Optional display name for letters
-      if(memberName === 'letters' && data.displayName){
-        const nameDiv = document.createElement('div');
-        nameDiv.textContent = data.displayName;
-        nameDiv.style.fontFamily = '"Comic Sans MS", cursive, sans-serif'; // handwritten style
-        nameDiv.style.fontSize = '0.85rem';
-        nameDiv.style.marginTop = '4px';
-        nameDiv.style.textAlign = 'right';
-        nameDiv.style.color = '#333';
-        noteDiv.appendChild(nameDiv);
-      }
       // Append note to wall
       wall.appendChild(noteDiv);
     });
@@ -641,3 +624,4 @@ renderLettersSection();
 </script>
 </body>
 </html> 
+

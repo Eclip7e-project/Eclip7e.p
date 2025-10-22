@@ -163,32 +163,33 @@ modalLike.onclick = async () => {
   localStorage.setItem('likedNotes', JSON.stringify(liked));
 };
 
-// Delete button
+ // --------- Delete Letter ---------
 modalDelete.onclick = async () => {
   if (!currentModalNote) return;
-  if (!confirm("Delete this note?")) return;
+  if (!confirm("Delete this letter?")) return;
 
   try {
-    const docRef = doc(db, 'notes', 'anton', 'memberNotes', currentModalNote.id);
+    const docRef = doc(db, 'notes', 'letters', 'memberNotes', currentModalNote.id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-      alert("Note already deleted.");
+      alert("Letter already deleted.");
       return;
     }
 
     const noteData = docSnap.data();
 
+    // Only allow delete if user is creator or owner
     if (noteData.creator !== userId && userId !== "cris_owner_001") {
-      alert("You don't have permission to delete this note.");
+      alert("You don't have permission to delete this letter.");
       return;
     }
 
     await deleteDoc(docRef);
     modal.style.display = 'none';
   } catch (err) {
-    console.error("Failed to delete note:", err);
-    alert("Error deleting note — check console.");
+    console.error("Failed to delete letter:", err);
+    alert("Error deleting letter — check console.");
   }
 };
 
@@ -258,6 +259,7 @@ onSnapshot(notesCol, snapshot=>{
 
 </body>
 </html>
+
 
 
 

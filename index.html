@@ -428,8 +428,6 @@ label.textContent = currentMember === 'letters' ? 'Write your letter (max 2000 c
   document.body.style.overflow = 'hidden';
 }
 
-charCount.textContent = `0 / ${currentMember === 'letters' ? 2000 : 300}`;
-
 const closeModal = () => {
   modal.style.display = 'none';
   document.body.style.overflow = '';
@@ -719,6 +717,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

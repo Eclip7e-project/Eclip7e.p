@@ -687,20 +687,16 @@ modalSubmit.addEventListener('click', async ()=>{
 });
 
 
+
 const charCount = $('#char-count');
+
 noteText.addEventListener('input', e => {
   // Determine limit based on current member
   const limit = currentMember === 'letters' ? 2000 : 300;
-
-  // Trim if user exceeds the limit
   if(e.target.value.length > limit){
     e.target.value = e.target.value.slice(0, limit);
   }
-
-  // Update live counter
   charCount.textContent = `${e.target.value.length} / ${limit}`;
-
-  // Update modal preview text
   previewText.textContent = e.target.value;
 });
 
@@ -717,6 +713,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

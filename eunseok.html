@@ -165,10 +165,31 @@ modalLike.onclick = async () => {
 
 // Delete button
 modalDelete.onclick = async () => {
-  if(!currentModalNote) return;
-  if(!confirm("Delete your note?")) return;
-  await deleteDoc(doc(db,'notes',memberName,'memberNotes',currentModalNote.id));
-  modal.style.display='none';
+  if (!currentModalNote) return;
+  if (!confirm("Delete this note?")) return;
+
+  try {
+    const docRef = doc(db, 'notes', 'anton', 'memberNotes', currentModalNote.id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      alert("Note already deleted.");
+      return;
+    }
+
+    const noteData = docSnap.data();
+
+    if (noteData.creator !== userId && userId !== "cris_owner_001") {
+      alert("You don't have permission to delete this note.");
+      return;
+    }
+
+    await deleteDoc(docRef);
+    modal.style.display = 'none';
+  } catch (err) {
+    console.error("Failed to delete note:", err);
+    alert("Error deleting note — check console.");
+  }
 };
 
 // Render notes with download
@@ -233,38 +254,11 @@ onSnapshot(notesCol, snapshot=>{
   renderNotes(notes);
 });
 
- // --------- Delete Notes ---------
-modalDelete.onclick = async () => {
-  if (!currentModalNote) return;
-  if (!confirm("Delete this letter?")) return;
-
-  try {
-    const docRef = doc(db, 'notes', 'member', 'memberNotes', currentModalNote.id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      alert("Note already deleted.");
-      return;
-    }
-
-    const noteData = docSnap.data();
-
-    // Only allow delete if user is creator or owner
-    if (noteData.creator !== userId && userId !== "cris_owner_001") {
-      alert("You don't have permission to delete this letter.");
-      return;
-    }
-
-    await deleteDoc(docRef);
-    modal.style.display = 'none';
-  } catch (err) {
-    console.error("Failed to delete letter:", err);
-    alert("Error deleting letter — check console.");
-  }
-};</script>
+</script>
 
 </body>
 </html>
+
 
 
 

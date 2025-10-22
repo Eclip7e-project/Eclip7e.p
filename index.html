@@ -400,27 +400,30 @@ function setupModal() {
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
+  // Set maxlength depending on member
+  if(currentMember === 'letters'){
+    noteText.maxLength = 2000;
+    noteText.placeholder = "Write your letter (max 2000 chars)";
+  } else {
+    noteText.maxLength = 300;
+    noteText.placeholder = "Write your message (max 300 chars)";
+  }
+
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
     memberSelectLabel.style.display = 'block';
     memberSelect.value = currentMember || 'shotaro';
-    noteText.maxLength = 300; // plain/simple notes max 300
-  } else if(currentMember === 'letters'){
-    modalMemberTitle.textContent = 'LETTER';
-    memberSelect.style.display = 'none';
-    memberSelectLabel.style.display = 'none';
-    noteText.maxLength = 2000; // letters max 2000
   } else {
     modalMemberTitle.textContent = currentMember.toUpperCase();
     memberSelect.style.display = 'none';
     memberSelectLabel.style.display = 'none';
-    noteText.maxLength = 300; // normal member notes max 300
   }
 
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+
 
 
 const closeModal = () => {
@@ -693,4 +696,5 @@ renderLettersSection();
 
 </body>
 </html> 
+
 

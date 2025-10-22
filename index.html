@@ -409,6 +409,10 @@ function setupModal() {
     noteText.placeholder = "Write your message (max 300 chars)";
   }
 
+// ✅ Add this right here:
+const label = noteText.previousElementSibling; // gets the <label> above the textarea
+label.textContent = currentMember === 'letters' ? 'Write your letter (max 2000 chars)' : 'Write your message (max 300 chars)';
+  
   if(currentMode === 'simple'){
     modalMemberTitle.textContent = 'Plain Note';
     memberSelect.style.display = 'block';
@@ -424,7 +428,7 @@ function setupModal() {
   document.body.style.overflow = 'hidden';
 }
 
-
+charCount.textContent = `0 / ${currentMember === 'letters' ? 2000 : 300}`;
 
 const closeModal = () => {
   modal.style.display = 'none';
@@ -684,6 +688,25 @@ modalSubmit.addEventListener('click', async ()=>{
   }
 });
 
+
+const charCount = $('#char-count');
+noteText.addEventListener('input', e => {
+  // Determine limit based on current member
+  const limit = currentMember === 'letters' ? 2000 : 300;
+
+  // Trim if user exceeds the limit
+  if(e.target.value.length > limit){
+    e.target.value = e.target.value.slice(0, limit);
+  }
+
+  // Update live counter
+  charCount.textContent = `${e.target.value.length} / ${limit}`;
+
+  // Update modal preview text
+  previewText.textContent = e.target.value;
+});
+
+  
 // ----------------- Initialize -----------------
 renderPickSection();
 setupPickFanDesignsRealtime();
@@ -696,5 +719,6 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 

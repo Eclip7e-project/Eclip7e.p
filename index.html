@@ -409,6 +409,11 @@ function setupModal() {
     noteText.maxLength = 300;
     noteText.placeholder = "Write your message (max 300 chars)";
   }
+  const charCount = $('#char-count');
+// ✅ Reset char counter each time modal opens
+const limit = currentMember === 'letters' ? 2000 : 300;
+charCount.textContent = `0 / ${limit}`;
+
 
 // ✅ Add this right here:
 const label = noteText.previousElementSibling; // gets the <label> above the textarea
@@ -714,6 +719,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

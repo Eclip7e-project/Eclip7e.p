@@ -317,7 +317,9 @@ Thank you for helping us celebrate and support RII7E! 🧡
         <label>Text color</label>
         <input id="color-picker" type="color" value="#000000">
         <label style="margin-top:10px">Write your message (max 300 chars)</label>
-        <textarea id="note-text" maxlength="300" placeholder="Write your message (max 300 chars)"></textarea>
+        <textarea id="note-text" placeholder="Write your message"></textarea>
+<small id="char-limit" style="display:block;margin-top:4px;color:#555;"></small>
+        
         <div class="modal-actions">
           <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
           <button class="btn btn-submit" id="modal-submit">Submit</button>
@@ -411,6 +413,11 @@ function setupModal() {
     memberSelectLabel.style.display = 'none';
   }
 
+  function updateCharLimit() {
+  const maxChars = currentMember === 'letters' ? 2000 : 300;
+  noteText.maxLength = maxChars;
+  $('#char-limit').textContent = `Max ${maxChars} characters`;
+}
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
@@ -685,4 +692,5 @@ renderLettersSection();
 
 </body>
 </html> 
+
 

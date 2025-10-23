@@ -335,7 +335,8 @@ Thank you for helping us celebrate and support RII7E! 🧡
 // ----------------- Firebase SDK -----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
+// ✅ Add Firebase Auth
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 // ----------------- Firebase Setup -----------------
 const firebaseConfig = {
   apiKey: "AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
@@ -347,6 +348,12 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+  // ✅ Initialize Firebase Auth
+const auth = getAuth();
+signInAnonymously(auth)
+  .then(() => console.log("Signed in anonymously"))
+  .catch(err => console.error("Auth error:", err));
 
 // ----------------- Members -----------------
 const members = [
@@ -719,6 +726,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

@@ -596,29 +596,42 @@ function renderSimpleNotes(){
     wall.appendChild(note);
   });
 }
-
+  
 // ----------------- Submit Fan Design -----------------
-submitDesignBtn.addEventListener('click', async ()=>{
+submitDesignBtn.addEventListener('click', async () => {
   const file = designFileInput.files[0];
   const member = designMember.value;
-  if(!file){ designMsg.textContent='Select a file!'; return; }
+  if (!file) { designMsg.textContent = 'Select a file!'; return; }
+
+  // Ensure user is signed in
+  const user = auth.currentUser;
+  if (!user) {
+    designMsg.textContent = 'Not signed in — try refreshing the page.';
+    return;
+  }
+  const creatorUid = user.uid; // IMPORTANT: use auth uid, not localStorage uuid
 
   const reader = new FileReader();
-  reader.onload = async e=>{
+  reader.onload = async e => {
     const imgData = e.target.result;
-    try{
-      await addDoc(collection(db,'designs',member,'fanDesigns'), { img: imgData, creator: userId });
-      designMsg.textContent='Design submitted!';
-      designFileInput.value='';
-      setTimeout(()=>designMsg.textContent='',3000);
-    }catch(err){
-      console.error(err);
-      designMsg.textContent='Error submitting design.';
-      setTimeout(()=>designMsg.textContent='',3000);
+    try {
+      await addDoc(collection(db, 'designs', member, 'fanDesigns'), {
+        img: imgData,
+        creator: creatorUid,
+        timestamp: Date.now()
+      });
+      designMsg.textContent = 'Design submitted!';
+      designFileInput.value = '';
+      setTimeout(() => designMsg.textContent = '', 3000);
+    } catch (err) {
+      console.error('Design upload error:', err);
+      designMsg.textContent = 'Error submitting design.';
+      setTimeout(() => designMsg.textContent = '', 3000);
     }
   };
   reader.readAsDataURL(file);
 });
+
 
 // ----------------- Manage Designs (Realtime) -----------------
 function setupManageDesignsRealtime() {
@@ -726,6 +739,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

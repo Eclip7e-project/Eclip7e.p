@@ -598,27 +598,37 @@ function renderSimpleNotes(){
 }
   
 // ----------------- Submit Fan Design -----------------
-submitDesignBtn.addEventListener('click', async ()=>{
+submitDesignBtn.addEventListener('click', async () => {
+  console.log('Submit clicked');
   const file = designFileInput.files[0];
   const member = designMember.value;
-  if(!file){ designMsg.textContent='Select a file!'; return; }
+  console.log('Selected file:', file);
+  console.log('Member:', member);
+  if (!file) {
+    designMsg.textContent = 'Select a file!';
+    return;
+  }
 
   const reader = new FileReader();
-  reader.onload = async e=>{
+  reader.onload = async e => {
     const imgData = e.target.result;
-    try{
-      await addDoc(collection(db,'designs',member,'fanDesigns'), { img: imgData, creator: userId });
+    console.log('FileReader loaded, first 50 chars:', imgData.slice(0,50));
+
+    try {
+      const docRef = await addDoc(collection(db,'designs',member,'fanDesigns'), { img: imgData, creator: userId });
+      console.log('Document added:', docRef.id);
       designMsg.textContent='Design submitted!';
       designFileInput.value='';
       setTimeout(()=>designMsg.textContent='',3000);
-    }catch(err){
-      console.error(err);
+    } catch(err) {
+      console.error('Firestore error:', err);
       designMsg.textContent='Error submitting design.';
-      setTimeout(()=>designMsg.textContent='',3000);
     }
   };
+  reader.onerror = (err) => console.error('FileReader error:', err);
   reader.readAsDataURL(file);
 });
+
 
 // ----------------- Manage Designs (Realtime) -----------------
 function setupManageDesignsRealtime() {
@@ -726,6 +736,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

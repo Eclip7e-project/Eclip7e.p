@@ -125,7 +125,25 @@ body {
 }
 
 
-     
+
+
+    /* Only for letters: confine text to letter area */
+.preview-text.letters {
+  position: absolute;
+  top: 15%;       /* adjust as needed */
+  left: 10%;
+  width: 80%;
+  height: 70%;    /* adjust to fit letter area */
+  display: flex;
+  align-items: flex-start; /* top-align for letter text */
+  justify-content: center;
+  text-align: left;
+  font-size: 1rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  pointer-events: none;
+}
+
      
   </style>
 </head>
@@ -405,6 +423,15 @@ const getCurrentWeek = () => Math.floor((new Date() - new Date('2025-09-04')) / 
 function setupModal() {
   modalImg.src = currentImg;
   previewText.textContent = '';
+
+// Remove all previous special classes first
+previewText.classList.remove('letters');
+
+// Apply letters class only if current member is 'letters'
+if(currentMember === 'letters'){
+    previewText.classList.add('letters');
+}
+  
   previewText.style.color = colorPicker.value || '#000';
   noteText.value = '';
 
@@ -764,6 +791,7 @@ renderLettersSection();
 
 </body>
 </html> 
+
 
 
 

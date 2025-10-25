@@ -86,7 +86,7 @@ h1{
   justify-content:space-between;
 }
 
-.top-note, .top-letter {
+.top-note, .top-letter{
   border:3px solid gold;
   box-shadow:0 0 15px gold;
 }
@@ -122,34 +122,32 @@ footer a:hover{
 @media screen and (max-width: 768px) {
   .wall-container {
     display: block;
-    padding: 0 10px 20px; 
+    padding: 0 10px 20px;
   }
 
   .note, .letter {
     width: 160px;
     margin: 0 auto 15px;
-    height: auto;         
-    aspect-ratio: 1 / 1;  
+    height: auto;
+    aspect-ratio: 1 / 1;
     font-size: 0.70rem;
   }
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h1>Weekly Favorites Archive</h1>
-  <p>See the top-liked note and letter for each member from Week 1 onward.  
-  The current week’s favorites are highlighted in gold!</p>
-  <a href="index.html">← Back to Homepage</a>
+<h1>Weekly Favorites Archive</h1>
+<p>See the top-liked note and letter for each member from week 1 onwards. Current week is highlighted in gold! Click any to visit that member’s wall.</p>
+<a href="index.html">← Back to Homepage</a>
 </header>
 
 <div id="favorites-container"></div>
 
 <footer>
-  <p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
-  <img src="logo.jpg" alt="Logo" height="80">
+<p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
+<img src="logo.jpg" alt="Logo" height="80">
 </footer>
 
 <script type="module">
@@ -167,9 +165,15 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// week counters
-const currentNoteWeek = Math.floor((new Date() - new Date('2025-09-04')) / (7*24*60*60*1000)) + 1;
-const currentLetterWeek = Math.floor((new Date() - new Date('2025-10-26')) / (7*24*60*60*1000)) + 1;
+// calculate current weeks
+function calculateWeek(startDateStr) {
+  const startDate = new Date(startDateStr);
+  const today = new Date();
+  const diffWeeks = Math.floor((today - startDate) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  return diffWeeks < 1 ? 1 : diffWeeks;
+}
+const currentNoteWeek = calculateWeek('2025-09-04');
+const currentLetterWeek = calculateWeek('2025-10-26');
 
 const members = [
   {name:'shotaro', wall:'shotaro.html'},
@@ -185,7 +189,6 @@ const members = [
 
 const favoritesContainer = document.getElementById('favorites-container');
 
-// assign local id
 members.forEach(m=>{
   if(!localStorage.getItem('userId_'+m.name)){
     localStorage.setItem('userId_'+m.name, Date.now() + Math.random());
@@ -202,15 +205,28 @@ function renderMember(member, notes, letters){
   const wallDiv = document.createElement('div');
   wallDiv.className = 'wall-container';
 
-  // --- NOTES ---
+  // filter out invalid weeks
+  notes = notes.filter(n => n.week >= 1 && !n.deleted);
+  letters = letters.filter(l => l.week >= 1 && !l.deleted);
+
+  // most liked per week
   const weekMapNotes = {};
   notes.forEach(n=>{
     if(!weekMapNotes[n.week] || (n.likes||0) > (weekMapNotes[n.week].likes||0)){
       weekMapNotes[n.week] = n;
     }
   });
+
+  const weekMapLetters = {};
+  letters.forEach(l=>{
+    if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
+      weekMapLetters[l.week] = l;
+    }
+  });
+
   const currentUser = localStorage.getItem('userId_'+member.name);
 
+  // render notes
   Object.values(weekMapNotes).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
@@ -248,14 +264,7 @@ function renderMember(member, notes, letters){
     wallDiv.appendChild(div);
   });
 
-  // --- LETTERS ---
-  const weekMapLetters = {};
-  letters.forEach(l=>{
-    if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
-      weekMapLetters[l.week] = l;
-    }
-  });
-
+  // render letters
   Object.values(weekMapLetters).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'letter';
@@ -263,12 +272,12 @@ function renderMember(member, notes, letters){
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = l.bg || 'letterbg.png'; // fallback
+    imgEl.src = l.bg || 'letterbg.png';
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = l.text.slice(0,300); // preview snippet
+    textDiv.textContent = l.text.slice(0,300);
     textDiv.style.color = l.color || 'black';
     div.appendChild(textDiv);
 
@@ -297,13 +306,10 @@ function renderMember(member, notes, letters){
   favoritesContainer.appendChild(section);
 }
 
-// load from Firestore
 members.forEach(member=>{
   const notesCol = collection(db,'notes',member.name,'memberNotes');
   const lettersCol = collection(db,'letters',member.name,'memberLetters');
-
   let notes=[], letters=[];
-
   onSnapshot(notesCol, snap=>{
     notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
     update();

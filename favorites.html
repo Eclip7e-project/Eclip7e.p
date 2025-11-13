@@ -7,34 +7,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 <style>
 body {
-  margin: 0;
-  font-family: 'Playfair Display', serif;
-  background-color: black;
-  color: white;
-  background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-  text-align: center;
+  margin:0;
+  font-family:'Playfair Display', serif;
+  background-color:black;
+  color:white;
+  background-image:url('https://www.transparenttextures.com/patterns/stardust.png');
+  text-align:center;
 }
 
-header {
-  padding: 30px;
+header{
+  padding:30px;
 }
 
-h1 {
-  color: gold;
+h1{
+  color:gold;
 }
 
-.member-section {
-  margin: 40px 0;
+.member-section{
+  margin:40px 0;
 }
 
-.member-section h2 {
-  text-align: center;
-  color: gold;
-  margin-bottom: 20px;
+.member-section h2{
+  text-align:center;
+  color:gold;
+  margin-bottom:20px;
 }
 
-.wall-container {
-  display: flex;
+.wall-container{
+  display:flex;
   flex-wrap: wrap;
   gap: 15px;
   padding: 0 20px 20px 20px;
@@ -43,8 +43,8 @@ h1 {
 
 .note, .letter {
   flex: 0 0 180px;
-  min-height: 180px;
-  border-radius: 12px;
+  min-height:180px;
+  border-radius:12px;
   position: relative;
   cursor: pointer;
   aspect-ratio: 1 / 1;
@@ -53,70 +53,69 @@ h1 {
 .note img, .letter img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  display: block;
+  object-fit:cover;
+  border-radius:12px;
+  display:block;
 }
 
 .text {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  bottom: 35px;
-  color: black;
+  top:10px;
+  left:10px;
+  right:10px;
+  bottom:35px;
+  color:black;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   font-size: 0.70rem;
-  line-height: 1.1em;
-  overflow: hidden;
+  line-height:1.1em;
+  overflow:hidden;
 }
 
-.info-box {
-  position: absolute;
-  bottom: 5px;
-  left: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.65);
-  color: white;
-  font-size: 0.75em;
-  padding: 3px 5px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.info-box{
+  position:absolute;
+  bottom:5px;
+  left:10px;
+  right:10px;
+  background:rgba(0,0,0,0.6);
+  color:white;
+  font-size:0.8em;
+  padding:2px 5px;
+  border-radius:5px;
+  display:flex;
+  justify-content:space-between;
 }
 
-.top-note, .top-letter {
-  border: 3px solid gold;
-  box-shadow: 0 0 15px gold;
+.top-note, .top-letter{
+  border:3px solid gold;
+  box-shadow:0 0 15px gold;
 }
 
-.delete-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: red;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 3px 7px;
-  cursor: pointer;
+.delete-btn{
+  position:absolute;
+  top:5px;
+  right:5px;
+  background:red;
+  color:white;
+  border:none;
+  border-radius:5px;
+  padding:3px 7px;
+  cursor:pointer;
 }
 
-footer {
-  padding: 30px 0;
-  border-top: 2px solid gold;
-  text-align: center;
+footer{
+  padding:30px 0;
+  border-top:2px solid gold;
+  text-align:center;
 }
 
-footer a {
-  color: gold;
-  text-decoration: none;
+footer a{
+  color:gold;
+  text-decoration:none;
 }
 
-footer a:hover {
-  text-decoration: underline;
+footer a:hover{
+  text-decoration:underline;
 }
 
 /* MOBILE STYLES */
@@ -190,7 +189,7 @@ const members = [
 
 const favoritesContainer = document.getElementById('favorites-container');
 
-members.forEach(m => {
+members.forEach(m=>{
   if(!localStorage.getItem('userId_'+m.name)){
     localStorage.setItem('userId_'+m.name, Date.now() + Math.random());
   }
@@ -206,18 +205,20 @@ function renderMember(member, notes, letters){
   const wallDiv = document.createElement('div');
   wallDiv.className = 'wall-container';
 
+  // filter out invalid weeks
   notes = notes.filter(n => n.week >= 1 && !n.deleted);
   letters = letters.filter(l => l.week >= 1 && !l.deleted);
 
+  // most liked per week
   const weekMapNotes = {};
-  notes.forEach(n => {
+  notes.forEach(n=>{
     if(!weekMapNotes[n.week] || (n.likes||0) > (weekMapNotes[n.week].likes||0)){
       weekMapNotes[n.week] = n;
     }
   });
 
   const weekMapLetters = {};
-  letters.forEach(l => {
+  letters.forEach(l=>{
     if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
       weekMapLetters[l.week] = l;
     }
@@ -226,11 +227,11 @@ function renderMember(member, notes, letters){
   const currentUser = localStorage.getItem('userId_'+member.name);
 
   // render notes
-  Object.values(weekMapNotes).forEach(n => {
+  Object.values(weekMapNotes).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
     if(n.week === currentNoteWeek) div.classList.add('top-note');
-    div.onclick = () => window.location.href = member.wall;
+    div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
     imgEl.src = n.img;
@@ -244,18 +245,31 @@ function renderMember(member, notes, letters){
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Week ${n.week}</span>`;
+    info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Note Week ${n.week}</span>`;
     div.appendChild(info);
+
+    if(n.creator===currentUser){
+      const btn=document.createElement('button');
+      btn.className='delete-btn';
+      btn.textContent='Delete';
+      btn.onclick=async(e)=>{
+        e.stopPropagation();
+        if(confirm("Delete your note?")){
+          await deleteDoc(doc(db,'notes',member.name,'memberNotes',n.id));
+        }
+      }
+      div.appendChild(btn);
+    }
 
     wallDiv.appendChild(div);
   });
 
-  // render letters (generic)
-  Object.values(weekMapLetters).forEach(l => {
+  // render letters
+  Object.values(weekMapLetters).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'letter';
     if(l.week === currentLetterWeek) div.classList.add('top-letter');
-    div.onclick = () => window.location.href = member.wall;
+    div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
     imgEl.src = l.bg || 'letterbg.png';
@@ -263,14 +277,27 @@ function renderMember(member, notes, letters){
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = l.text.slice(0, 300);
+    textDiv.textContent = l.text.slice(0,300);
     textDiv.style.color = l.color || 'black';
     div.appendChild(textDiv);
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Week ${l.week}</span>`;
+    info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter Week ${l.week}</span>`;
     div.appendChild(info);
+
+    if(l.creator===currentUser){
+      const btn=document.createElement('button');
+      btn.className='delete-btn';
+      btn.textContent='Delete';
+      btn.onclick=async(e)=>{
+        e.stopPropagation();
+        if(confirm("Delete your letter?")){
+          await deleteDoc(doc(db,'notes','letters','memberNotes',l.id));
+        }
+      }
+      div.appendChild(btn);
+    }
 
     wallDiv.appendChild(div);
   });
@@ -279,23 +306,22 @@ function renderMember(member, notes, letters){
   favoritesContainer.appendChild(section);
 }
 
-// load data
-members.forEach(member => {
-  const notesCol = collection(db, 'notes', member.name, 'memberNotes');
-  const lettersCol = collection(db, 'letters', 'memberNotes'); // ✅ generic letters
-  let notes = [], letters = [];
-  onSnapshot(notesCol, snap => {
-    notes = snap.docs.map(d => ({id:d.id, ...d.data()}));
+members.forEach(member=>{
+  const notesCol = collection(db,'notes',member.name,'memberNotes');
+  const lettersCol = collection(db,'notes','letters','memberNotes');
+  let notes=[], letters=[];
+  onSnapshot(notesCol, snap=>{
+    notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
     update();
   });
-  onSnapshot(lettersCol, snap => {
-    letters = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  onSnapshot(lettersCol, snap=>{
+    letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
     update();
   });
 
   function update(){
-    const oldSection = [...favoritesContainer.getElementsByClassName('member-section')]
-      .find(s => s.querySelector('h2').textContent === member.name.toUpperCase());
+    const oldSection=[...favoritesContainer.getElementsByClassName('member-section')]
+      .find(s=>s.querySelector('h2').textContent===member.name.toUpperCase());
     if(oldSection) oldSection.remove();
     renderMember(member, notes, letters);
   }
@@ -303,5 +329,3 @@ members.forEach(member => {
 </script>
 </body>
 </html>
-
-

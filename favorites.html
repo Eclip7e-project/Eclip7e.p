@@ -15,28 +15,28 @@ body {
   text-align:center;
 }
 
-header{
+header {
   padding:30px;
 }
 
-h1{
+h1 {
   color:gold;
 }
 
-.member-section{
+.member-section, .letter-section {
   margin:40px 0;
 }
 
-.member-section h2{
+.member-section h2, .letter-section h2 {
   text-align:center;
   color:gold;
   margin-bottom:20px;
 }
 
-.wall-container{
+.wall-container {
   display:flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 25px;
   padding: 0 20px 20px 20px;
   justify-content: flex-start;
 }
@@ -48,14 +48,27 @@ h1{
   position: relative;
   cursor: pointer;
   aspect-ratio: 1 / 1;
-  overflow:hidden;
 }
 
 .note img, .letter img {
   width: 100%;
   height: 100%;
   object-fit:cover;
+  border-radius:12px;
   display:block;
+}
+
+.week-label {
+  position: absolute;
+  top:-30px;
+  left:50%;
+  transform:translateX(-50%);
+  background: gold;
+  color: black;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:0.9em;
+  font-weight:bold;
 }
 
 .text {
@@ -72,7 +85,7 @@ h1{
   overflow:hidden;
 }
 
-.info-box{
+.info-box {
   position:absolute;
   bottom:5px;
   left:10px;
@@ -86,23 +99,12 @@ h1{
   justify-content:space-between;
 }
 
-.favorite-label {
-  background:gold;
-  color:black;
-  font-weight:bold;
-  font-size:0.75rem;
-  text-align:center;
-  border-radius:5px;
-  padding:2px 5px;
-  margin-top:5px;
-}
-
-.top-note, .top-letter{
+.top-note, .top-letter {
   border:3px solid gold;
   box-shadow:0 0 15px gold;
 }
 
-.delete-btn{
+.delete-btn {
   position:absolute;
   top:5px;
   right:5px;
@@ -114,18 +116,18 @@ h1{
   cursor:pointer;
 }
 
-footer{
+footer {
   padding:30px 0;
   border-top:2px solid gold;
   text-align:center;
 }
 
-footer a{
+footer a {
   color:gold;
   text-decoration:none;
 }
 
-footer a:hover{
+footer a:hover {
   text-decoration:underline;
 }
 
@@ -138,10 +140,15 @@ footer a:hover{
 
   .note, .letter {
     width: 160px;
-    margin: 0 auto 15px;
+    margin: 0 auto 40px;
     height: auto;
     aspect-ratio: 1 / 1;
     font-size: 0.70rem;
+  }
+
+  .week-label {
+    top:-25px;
+    font-size:0.8em;
   }
 }
 </style>
@@ -150,11 +157,15 @@ footer a:hover{
 
 <header>
 <h1>Weekly Favorites Archive</h1>
-<p>See the top-liked notes and letters for each member. Current week favorites are highlighted in gold! Click any note or letter to visit that member’s wall.</p>
+<p>See the top-liked notes for each member from week 1 onwards, plus the top letter of each week. Current week is highlighted in gold! Click any note to visit that member’s wall.</p>
 <a href="index.html">← Back to Homepage</a>
 </header>
 
 <div id="favorites-container"></div>
+<div id="letters-container" class="letter-section">
+  <h2>WEEKLY FAVORITE LETTERS</h2>
+  <div class="wall-container" id="letters-wall"></div>
+</div>
 
 <footer>
 <p>Created by <a href="https://x.com/R7_UNION" target="_blank">@R7_UNION</a></p>
@@ -184,7 +195,7 @@ function calculateWeek(startDateStr) {
   return diffWeeks < 1 ? 1 : diffWeeks;
 }
 const currentNoteWeek = calculateWeek('2025-09-04');
-const currentLetterWeek = calculateWeek('2025-11-10'); // letters start later
+const currentLetterWeek = calculateWeek('2025-11-10');
 
 const members = [
   {name:'shotaro', wall:'shotaro.html'},
@@ -199,14 +210,26 @@ const members = [
 ];
 
 const favoritesContainer = document.getElementById('favorites-container');
+const lettersWall = document.getElementById('letters-wall');
 
-members.forEach(m=>{
-  if(!localStorage.getItem('userId_'+m.name)){
-    localStorage.setItem('userId_'+m.name, Date.now() + Math.random());
+// --- MEMBER NOTES ---
+members.forEach(member=>{
+  const notesCol = collection(db,'notes',member.name,'memberNotes');
+  let notes=[];
+  onSnapshot(notesCol, snap=>{
+    notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    update();
+  });
+
+  function update(){
+    const oldSection=[...favoritesContainer.getElementsByClassName('member-section')]
+      .find(s=>s.querySelector('h2').textContent===member.name.toUpperCase());
+    if(oldSection) oldSection.remove();
+    renderMember(member, notes);
   }
 });
 
-function renderMember(member, notes, letters){
+function renderMember(member, notes){
   const section = document.createElement('div');
   section.className = 'member-section';
   const title = document.createElement('h2');
@@ -216,11 +239,6 @@ function renderMember(member, notes, letters){
   const wallDiv = document.createElement('div');
   wallDiv.className = 'wall-container';
 
-  // filter out invalid weeks
-  notes = notes.filter(n => n.week >= 1 && !n.deleted);
-  letters = letters.filter(l => l.week >= 1 && !l.deleted);
-
-  // most liked per week
   const weekMapNotes = {};
   notes.forEach(n=>{
     if(!weekMapNotes[n.week] || (n.likes||0) > (weekMapNotes[n.week].likes||0)){
@@ -228,21 +246,16 @@ function renderMember(member, notes, letters){
     }
   });
 
-  const weekMapLetters = {};
-  letters.forEach(l=>{
-    if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
-      weekMapLetters[l.week] = l;
-    }
-  });
-
-  const currentUser = localStorage.getItem('userId_'+member.name);
-
-  // render notes
   Object.values(weekMapNotes).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
     if(n.week === currentNoteWeek) div.classList.add('top-note');
     div.onclick = ()=>window.location.href=member.wall;
+
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'week-label';
+    weekLabel.textContent = `Week ${n.week} Favorite`;
+    div.appendChild(weekLabel);
 
     const imgEl = document.createElement('img');
     imgEl.src = n.img;
@@ -256,71 +269,8 @@ function renderMember(member, notes, letters){
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${n.likes||0}</span>`;
+    info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Note</span>`;
     div.appendChild(info);
-
-    // week label under the note
-    const label = document.createElement('div');
-    label.className = 'favorite-label';
-    label.textContent = `Week ${n.week} Favorite`;
-    div.appendChild(label);
-
-    if(n.creator===currentUser){
-      const btn=document.createElement('button');
-      btn.className='delete-btn';
-      btn.textContent='Delete';
-      btn.onclick=async(e)=>{
-        e.stopPropagation();
-        if(confirm("Delete your note?")){
-          await deleteDoc(doc(db,'notes',member.name,'memberNotes',n.id));
-        }
-      }
-      div.appendChild(btn);
-    }
-
-    wallDiv.appendChild(div);
-  });
-
-  // render letters
-  Object.values(weekMapLetters).forEach(l=>{
-    const div = document.createElement('div');
-    div.className = 'letter';
-    if(l.week === currentLetterWeek) div.classList.add('top-letter');
-    div.onclick = ()=>window.location.href=member.wall;
-
-    const imgEl = document.createElement('img');
-    imgEl.src = l.bg || 'letterbg.png';
-    div.appendChild(imgEl);
-
-    const textDiv = document.createElement('div');
-    textDiv.className = 'text';
-    textDiv.textContent = l.text.slice(0,300);
-    textDiv.style.color = l.color || 'black';
-    div.appendChild(textDiv);
-
-    const info = document.createElement('div');
-    info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${l.likes||0}</span>`;
-    div.appendChild(info);
-
-    // week label under the letter
-    const label = document.createElement('div');
-    label.className = 'favorite-label';
-    label.textContent = `Week ${l.week} Favorite`;
-    div.appendChild(label);
-
-    if(l.creator===currentUser){
-      const btn=document.createElement('button');
-      btn.className='delete-btn';
-      btn.textContent='Delete';
-      btn.onclick=async(e)=>{
-        e.stopPropagation();
-        if(confirm("Delete your letter?")){
-          await deleteDoc(doc(db,'letters',member.name,'memberLetters',l.id));
-        }
-      }
-      div.appendChild(btn);
-    }
 
     wallDiv.appendChild(div);
   });
@@ -329,26 +279,54 @@ function renderMember(member, notes, letters){
   favoritesContainer.appendChild(section);
 }
 
-members.forEach(member=>{
-  const notesCol = collection(db,'notes',member.name,'memberNotes');
-  const lettersCol = collection(db,'letters',member.name,'memberLetters');
-  let notes=[], letters=[];
-  onSnapshot(notesCol, snap=>{
-    notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    update();
-  });
-  onSnapshot(lettersCol, snap=>{
-    letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    update();
+// --- GENERIC LETTERS ---
+const lettersCol = collection(db, 'letters', 'all', 'allLetters');
+onSnapshot(lettersCol, snap=>{
+  const letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  renderLetters(letters);
+});
+
+function renderLetters(letters){
+  lettersWall.innerHTML = '';
+  const weekMap = {};
+  letters.forEach(l=>{
+    const letterDate = l.date || l.timestamp?.toDate?.() || new Date();
+    const week = calculateWeek('2025-11-10', letterDate);
+    l.week = week;
+    if(!weekMap[week] || (l.likes||0) > (weekMap[week].likes||0)){
+      weekMap[week] = l;
+    }
   });
 
-  function update(){
-    const oldSection=[...favoritesContainer.getElementsByClassName('member-section')]
-      .find(s=>s.querySelector('h2').textContent===member.name.toUpperCase());
-    if(oldSection) oldSection.remove();
-    renderMember(member, notes, letters);
-  }
-});
+  Object.values(weekMap).forEach(l=>{
+    const div = document.createElement('div');
+    div.className = 'letter';
+    if(l.week === currentLetterWeek) div.classList.add('top-letter');
+    div.onclick = ()=>window.location.href='letters.html';
+
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'week-label';
+    weekLabel.textContent = `Week ${l.week} Favorite`;
+    div.appendChild(weekLabel);
+
+    const imgEl = document.createElement('img');
+    imgEl.src = l.bg || l.img || 'letterbg.png';
+    div.appendChild(imgEl);
+
+    const textDiv = document.createElement('div');
+    textDiv.className = 'text';
+    textDiv.textContent = l.text?.slice(0,300) || '';
+    textDiv.style.color = l.color || 'black';
+    div.appendChild(textDiv);
+
+    const info = document.createElement('div');
+    info.className = 'info-box';
+    info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter</span>`;
+    div.appendChild(info);
+
+    lettersWall.appendChild(div);
+  });
+}
 </script>
 </body>
 </html>

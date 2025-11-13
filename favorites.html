@@ -266,20 +266,22 @@ function renderLetters(letters){
   const startDate=new Date('2025-11-10');
   const weekMap={};
 
+  // Find top-liked letter for each week
   letters.forEach(l=>{
     const letterDate = l.date || l.timestamp?.toDate?.() || new Date();
     const week = Math.floor((letterDate - startDate)/(7*24*60*60*1000))+1;
     l.week = week;
 
     if(!weekMap[week] || (l.likes||0) > (weekMap[week].likes||0)){
-      weekMap[week]=l;
+      weekMap[week] = l;
     }
   });
 
-  letters.forEach(l=>{
+  // Render only the weekly favorite letters
+  Object.values(weekMap).forEach(l=>{
     const div=document.createElement('div');
     div.className='letter';
-    div.onclick = ()=>window.location.href='letter.html?id=' + l.id; // link to letter page
+    div.onclick = ()=>window.location.href='letter.html?id=' + l.id;
 
     const imgEl=document.createElement('img');
     imgEl.src=l.img || l.image || 'letterbg.png';
@@ -293,9 +295,7 @@ function renderLetters(letters){
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    if(weekMap[l.week] && weekMap[l.week].id === l.id){
-      info.classList.add('current-week');
-    }
+    info.classList.add('current-week'); // always top letter for the week
     info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter Week ${l.week}</span>`;
     div.appendChild(info);
 
@@ -305,6 +305,7 @@ function renderLetters(letters){
   section.appendChild(wallDiv);
   favoritesContainer.appendChild(section);
 }
+
 
 // --- Fetch Notes ---
 members.forEach(member=>{
@@ -331,3 +332,4 @@ onSnapshot(lettersCol,snap=>{
 </script>
 </body>
 </html>
+

@@ -165,7 +165,7 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// Calculate current weeks
+// calculate current weeks
 function calculateWeek(startDateStr) {
   const startDate = new Date(startDateStr);
   const today = new Date();
@@ -189,6 +189,7 @@ const members = [
 
 const favoritesContainer = document.getElementById('favorites-container');
 
+// create dummy userId for each member if not present
 members.forEach(m=>{
   if(!localStorage.getItem('userId_'+m.name)){
     localStorage.setItem('userId_'+m.name, Date.now() + Math.random());
@@ -205,56 +206,63 @@ function renderMember(member, notes, letters){
   const wallDiv = document.createElement('div');
   wallDiv.className = 'wall-container';
 
-  // filter out invalid weeks
-  notes = notes.filter(n => n.week >= 1 && !n.deleted);
-  letters = letters.filter(l => l.week >= 1 && !l.deleted);
-
-  // most liked per week
-  const weekMapNotes = {};
-  notes.forEach(n=>{
-    if(!weekMapNotes[n.week] || (n.likes||0) > (weekMapNotes[n.week].likes||0)){
-      weekMapNotes[n.week] = n;
-    }
-  });
-
-  const weekMapLetters = {};
-  letters.forEach(l=>{
-    if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
-      weekMapLetters[l.week] = l;
-    }
-  });
-
   const currentUser = localStorage.getItem('userId_'+member.name);
 
-  // Render notes
-  Object.values(weekMapNotes).forEach(n=>{
+  // Safely map letters and notes with defaults
+  notes = notes.map(n => ({ week:1, deleted:false, likes:0, text:'', img:'note-placeholder.png', ...n }));
+  letters = letters.map(l => ({ week:1, deleted:false, likes:0, text:'', bg:'letterbg.png', ...l }));
+
+  // Filter out deleted or invalid week
+  notes = notes.filter(n => !n.deleted && n.week >= 1);
+  letters = letters.filter(l => !l.deleted && l.week >= 1);
+
+  console.log('Rendering notes for', member.name, notes);
+  console.log('Rendering letters for', member.name, letters);
+
+  // Group by week, pick top liked
+  const topNotesPerWeek = {};
+  notes.forEach(n=>{
+    if(!topNotesPerWeek[n.week] || n.likes > topNotesPerWeek[n.week].likes){
+      topNotesPerWeek[n.week] = n;
+    }
+  });
+
+  const topLettersPerWeek = {};
+  letters.forEach(l=>{
+    if(!topLettersPerWeek[l.week] || l.likes > topLettersPerWeek[l.week].likes){
+      topLettersPerWeek[l.week] = l;
+    }
+  });
+
+  // Render top notes
+  Object.values(topNotesPerWeek).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
     if(n.week === currentNoteWeek) div.classList.add('top-note');
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = n.img || 'note-placeholder.png';
+    imgEl.src = n.img;
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = n.text || '';
+    textDiv.textContent = n.text;
     textDiv.style.color = n.color || 'black';
     div.appendChild(textDiv);
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Note Week ${n.week}</span>`;
+    info.innerHTML = `<span>❤️ ${n.likes}</span><span>Note Week ${n.week}</span>`;
     div.appendChild(info);
 
-    if(n.creator===currentUser){
-      const btn=document.createElement('button');
-      btn.className='delete-btn';
-      btn.textContent='Delete';
-      btn.onclick=async(e)=>{
+    if(n.creator === currentUser){
+      const btn = document.createElement('button');
+      btn.className = 'delete-btn';
+      btn.textContent = 'Delete';
+      btn.onclick = async (e)=>{
         e.stopPropagation();
-        if(confirm("Delete your note?")){
+        if(confirm('Delete your note?')){
           await deleteDoc(doc(db,'notes',member.name,'memberNotes',n.id));
         }
       }
@@ -264,36 +272,36 @@ function renderMember(member, notes, letters){
     wallDiv.appendChild(div);
   });
 
-  // Render letters
-  Object.values(weekMapLetters).forEach(l=>{
+  // Render top letters
+  Object.values(topLettersPerWeek).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'letter';
     if(l.week === currentLetterWeek) div.classList.add('top-letter');
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = l.img || l.bg || 'letterbg.png';
+    imgEl.src = l.bg;
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = l.text ? l.text.slice(0,300) : '';
+    textDiv.textContent = l.text.slice(0,300);
     textDiv.style.color = l.color || 'black';
     div.appendChild(textDiv);
 
     const info = document.createElement('div');
     info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter Week ${l.week}</span>`;
+    info.innerHTML = `<span>❤️ ${l.likes}</span><span>Letter Week ${l.week}</span>`;
     div.appendChild(info);
 
-    if(l.creator===currentUser){
-      const btn=document.createElement('button');
-      btn.className='delete-btn';
-      btn.textContent='Delete';
-      btn.onclick=async(e)=>{
+    if(l.creator === currentUser){
+      const btn = document.createElement('button');
+      btn.className = 'delete-btn';
+      btn.textContent = 'Delete';
+      btn.onclick = async (e)=>{
         e.stopPropagation();
-        if(confirm("Delete your letter?")){
-          await deleteDoc(doc(db,'letters',member.name,'memberLetters',l.id));
+        if(confirm('Delete your letter?')){
+          await deleteDoc(doc(db,'notes','letters','memberNotes',l.id));
         }
       }
       div.appendChild(btn);
@@ -306,18 +314,20 @@ function renderMember(member, notes, letters){
   favoritesContainer.appendChild(section);
 }
 
+// Load notes & letters for each member
 members.forEach(member=>{
   const notesCol = collection(db,'notes',member.name,'memberNotes');
-  const lettersCol = collection(db,'letters',member.name,'memberLetters');
+  const lettersCol = collection(db,'notes','letters','memberNotes');
+
   let notes=[], letters=[];
 
   onSnapshot(notesCol, snap=>{
-    notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    notes = snap.docs.map(d=>({id:d.id,...d.data()}));
     update();
   });
 
   onSnapshot(lettersCol, snap=>{
-    letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    letters = snap.docs.map(d=>({id:d.id,...d.data()}));
     update();
   });
 

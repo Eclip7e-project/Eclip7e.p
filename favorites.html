@@ -59,16 +59,14 @@ h1 {
 }
 
 .week-label {
-  position: absolute;
-  top:-30px;
-  left:50%;
-  transform:translateX(-50%);
   background: gold;
   color: black;
   padding:4px 8px;
   border-radius:8px;
   font-size:0.9em;
   font-weight:bold;
+  margin-top:8px;
+  display:inline-block;
 }
 
 .text {
@@ -116,6 +114,12 @@ h1 {
   cursor:pointer;
 }
 
+.card-wrapper {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
 footer {
   padding:30px 0;
   border-top:2px solid gold;
@@ -140,15 +144,10 @@ footer a:hover {
 
   .note, .letter {
     width: 160px;
-    margin: 0 auto 40px;
+    margin: 0 auto 10px;
     height: auto;
     aspect-ratio: 1 / 1;
     font-size: 0.70rem;
-  }
-
-  .week-label {
-    top:-25px;
-    font-size:0.8em;
   }
 }
 </style>
@@ -157,7 +156,7 @@ footer a:hover {
 
 <header>
 <h1>Weekly Favorites Archive</h1>
-<p>See the top-liked notes for each member from week 1 onwards, plus the top letter of each week. Current week is highlighted in gold! Click any note to visit that member’s wall.</p>
+<p>See the top-liked notes for each member and the top letter of each week. Current week is highlighted in gold! Click any note or letter to visit its page.</p>
 <a href="index.html">← Back to Homepage</a>
 </header>
 
@@ -174,7 +173,7 @@ footer a:hover {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyCM69r2wUibBFIFpML07Y5RUTrxHgonlSc",
@@ -187,7 +186,6 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// calculate current weeks
 function calculateWeek(startDateStr) {
   const startDate = new Date(startDateStr);
   const today = new Date();
@@ -212,7 +210,7 @@ const members = [
 const favoritesContainer = document.getElementById('favorites-container');
 const lettersWall = document.getElementById('letters-wall');
 
-// --- MEMBER NOTES ---
+// MEMBER NOTES
 members.forEach(member=>{
   const notesCol = collection(db,'notes',member.name,'memberNotes');
   let notes=[];
@@ -247,15 +245,13 @@ function renderMember(member, notes){
   });
 
   Object.values(weekMapNotes).forEach(n=>{
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+
     const div = document.createElement('div');
     div.className = 'note';
     if(n.week === currentNoteWeek) div.classList.add('top-note');
     div.onclick = ()=>window.location.href=member.wall;
-
-    const weekLabel = document.createElement('div');
-    weekLabel.className = 'week-label';
-    weekLabel.textContent = `Week ${n.week} Favorite`;
-    div.appendChild(weekLabel);
 
     const imgEl = document.createElement('img');
     imgEl.src = n.img;
@@ -272,15 +268,22 @@ function renderMember(member, notes){
     info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Note</span>`;
     div.appendChild(info);
 
-    wallDiv.appendChild(div);
+    wrapper.appendChild(div);
+
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'week-label';
+    weekLabel.textContent = `Week ${n.week} Favorite`;
+    wrapper.appendChild(weekLabel);
+
+    wallDiv.appendChild(wrapper);
   });
 
   section.appendChild(wallDiv);
   favoritesContainer.appendChild(section);
 }
 
-// --- GENERIC LETTERS ---
-const lettersCol = collection(db, 'letters', 'all', 'allLetters');
+// GENERIC LETTERS
+const lettersCol = collection(db, 'letters'); // adjust if your collection differs
 onSnapshot(lettersCol, snap=>{
   const letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
   renderLetters(letters);
@@ -299,15 +302,13 @@ function renderLetters(letters){
   });
 
   Object.values(weekMap).forEach(l=>{
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+
     const div = document.createElement('div');
     div.className = 'letter';
     if(l.week === currentLetterWeek) div.classList.add('top-letter');
     div.onclick = ()=>window.location.href='letters.html';
-
-    const weekLabel = document.createElement('div');
-    weekLabel.className = 'week-label';
-    weekLabel.textContent = `Week ${l.week} Favorite`;
-    div.appendChild(weekLabel);
 
     const imgEl = document.createElement('img');
     imgEl.src = l.bg || l.img || 'letterbg.png';
@@ -324,7 +325,14 @@ function renderLetters(letters){
     info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter</span>`;
     div.appendChild(info);
 
-    lettersWall.appendChild(div);
+    wrapper.appendChild(div);
+
+    const weekLabel = document.createElement('div');
+    weekLabel.className = 'week-label';
+    weekLabel.textContent = `Week ${l.week} Favorite`;
+    wrapper.appendChild(weekLabel);
+
+    lettersWall.appendChild(wrapper);
   });
 }
 </script>

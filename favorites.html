@@ -165,7 +165,7 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getFirestore();
 
-// calculate current weeks
+// Calculate current weeks
 function calculateWeek(startDateStr) {
   const startDate = new Date(startDateStr);
   const today = new Date();
@@ -226,7 +226,7 @@ function renderMember(member, notes, letters){
 
   const currentUser = localStorage.getItem('userId_'+member.name);
 
-  // render notes
+  // Render notes
   Object.values(weekMapNotes).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
@@ -234,12 +234,12 @@ function renderMember(member, notes, letters){
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = n.img;
+    imgEl.src = n.img || 'note-placeholder.png';
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = n.text;
+    textDiv.textContent = n.text || '';
     textDiv.style.color = n.color || 'black';
     div.appendChild(textDiv);
 
@@ -264,7 +264,7 @@ function renderMember(member, notes, letters){
     wallDiv.appendChild(div);
   });
 
-  // render letters
+  // Render letters
   Object.values(weekMapLetters).forEach(l=>{
     const div = document.createElement('div');
     div.className = 'letter';
@@ -272,12 +272,12 @@ function renderMember(member, notes, letters){
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = l.bg || 'letterbg.png';
+    imgEl.src = l.img || l.bg || 'letterbg.png';
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
     textDiv.className = 'text';
-    textDiv.textContent = l.text.slice(0,300);
+    textDiv.textContent = l.text ? l.text.slice(0,300) : '';
     textDiv.style.color = l.color || 'black';
     div.appendChild(textDiv);
 
@@ -310,10 +310,12 @@ members.forEach(member=>{
   const notesCol = collection(db,'notes',member.name,'memberNotes');
   const lettersCol = collection(db,'letters',member.name,'memberLetters');
   let notes=[], letters=[];
+
   onSnapshot(notesCol, snap=>{
     notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
     update();
   });
+
   onSnapshot(lettersCol, snap=>{
     letters = snap.docs.map(d=>({id:d.id, ...d.data()}));
     update();

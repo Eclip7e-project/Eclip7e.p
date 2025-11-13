@@ -189,14 +189,29 @@ const members = [
 
 const favoritesContainer = document.getElementById('favorites-container');
 
-// create dummy userId for each member if not present
+// Ensure unique IDs for notes per member
 members.forEach(m=>{
   if(!localStorage.getItem('userId_'+m.name)){
     localStorage.setItem('userId_'+m.name, Date.now() + Math.random());
   }
 });
 
-function renderMember(member, notes, letters){
+let allLetters = [];
+const lettersCol = collection(db,'notes','letters','memberNotes');
+onSnapshot(lettersCol, snap => {
+  allLetters = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  updateAllMembers();
+});
+
+// Helper to update all member sections
+function updateAllMembers(){
+  favoritesContainer.innerHTML = '';
+  members.forEach(member=>{
+    renderMember(member);
+  });
+}
+
+function renderMember(member){
   const section = document.createElement('div');
   section.className = 'member-section';
   const title = document.createElement('h2');
@@ -206,63 +221,60 @@ function renderMember(member, notes, letters){
   const wallDiv = document.createElement('div');
   wallDiv.className = 'wall-container';
 
+  const notesCol = collection(db,'notes',member.name,'memberNotes');
+  let memberNotes = [];
+  onSnapshot(notesCol, snap=>{
+    memberNotes = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderNotesAndLetters(member, memberNotes, wallDiv);
+  });
+
+  section.appendChild(wallDiv);
+  favoritesContainer.appendChild(section);
+}
+
+function renderNotesAndLetters(member, notes, wallDiv){
+  wallDiv.innerHTML = ''; // clear old
+
   const currentUser = localStorage.getItem('userId_'+member.name);
 
-  // Safely map letters and notes with defaults
-  notes = notes.map(n => ({ week:1, deleted:false, likes:0, text:'', img:'note-placeholder.png', ...n }));
-  letters = letters.map(l => ({ week:1, deleted:false, likes:0, text:'', bg:'letterbg.png', ...l }));
-
-  // Filter out deleted or invalid week
-  notes = notes.filter(n => !n.deleted && n.week >= 1);
-  letters = letters.filter(l => !l.deleted && l.week >= 1);
-
-  console.log('Rendering notes for', member.name, notes);
-  console.log('Rendering letters for', member.name, letters);
-
-  // Group by week, pick top liked
-  const topNotesPerWeek = {};
+  // most liked note per week
+  const weekMapNotes = {};
   notes.forEach(n=>{
-    if(!topNotesPerWeek[n.week] || n.likes > topNotesPerWeek[n.week].likes){
-      topNotesPerWeek[n.week] = n;
+    if(!n.deleted && n.week >=1){
+      if(!weekMapNotes[n.week] || (n.likes||0) > (weekMapNotes[n.week].likes||0)){
+        weekMapNotes[n.week] = n;
+      }
     }
   });
 
-  const topLettersPerWeek = {};
-  letters.forEach(l=>{
-    if(!topLettersPerWeek[l.week] || l.likes > topLettersPerWeek[l.week].likes){
-      topLettersPerWeek[l.week] = l;
-    }
-  });
-
-  // Render top notes
-  Object.values(topNotesPerWeek).forEach(n=>{
+  Object.values(weekMapNotes).forEach(n=>{
     const div = document.createElement('div');
     div.className = 'note';
     if(n.week === currentNoteWeek) div.classList.add('top-note');
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = n.img;
+    imgEl.src = n.img || 'note-placeholder.png';
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
-    textDiv.className = 'text';
+    textDiv.className='text';
     textDiv.textContent = n.text;
     textDiv.style.color = n.color || 'black';
     div.appendChild(textDiv);
 
     const info = document.createElement('div');
-    info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${n.likes}</span><span>Note Week ${n.week}</span>`;
+    info.className='info-box';
+    info.innerHTML = `<span>❤️ ${n.likes||0}</span><span>Note Week ${n.week}</span>`;
     div.appendChild(info);
 
-    if(n.creator === currentUser){
-      const btn = document.createElement('button');
-      btn.className = 'delete-btn';
-      btn.textContent = 'Delete';
-      btn.onclick = async (e)=>{
+    if(n.creator===currentUser){
+      const btn=document.createElement('button');
+      btn.className='delete-btn';
+      btn.textContent='Delete';
+      btn.onclick=async(e)=>{
         e.stopPropagation();
-        if(confirm('Delete your note?')){
+        if(confirm("Delete your note?")){
           await deleteDoc(doc(db,'notes',member.name,'memberNotes',n.id));
         }
       }
@@ -272,72 +284,40 @@ function renderMember(member, notes, letters){
     wallDiv.appendChild(div);
   });
 
-  // Render top letters
-  Object.values(topLettersPerWeek).forEach(l=>{
+  // generic letters (appear for all members)
+  const weekMapLetters = {};
+  allLetters.forEach(l=>{
+    if(!l.deleted && l.week >=1){
+      if(!weekMapLetters[l.week] || (l.likes||0) > (weekMapLetters[l.week].likes||0)){
+        weekMapLetters[l.week] = l;
+      }
+    }
+  });
+
+  Object.values(weekMapLetters).forEach(l=>{
     const div = document.createElement('div');
-    div.className = 'letter';
+    div.className='letter';
     if(l.week === currentLetterWeek) div.classList.add('top-letter');
     div.onclick = ()=>window.location.href=member.wall;
 
     const imgEl = document.createElement('img');
-    imgEl.src = l.bg;
+    imgEl.src = l.bg || 'letterbg.png';
     div.appendChild(imgEl);
 
     const textDiv = document.createElement('div');
-    textDiv.className = 'text';
+    textDiv.className='text';
     textDiv.textContent = l.text.slice(0,300);
     textDiv.style.color = l.color || 'black';
     div.appendChild(textDiv);
 
     const info = document.createElement('div');
-    info.className = 'info-box';
-    info.innerHTML = `<span>❤️ ${l.likes}</span><span>Letter Week ${l.week}</span>`;
+    info.className='info-box';
+    info.innerHTML = `<span>❤️ ${l.likes||0}</span><span>Letter Week ${l.week}</span>`;
     div.appendChild(info);
-
-    if(l.creator === currentUser){
-      const btn = document.createElement('button');
-      btn.className = 'delete-btn';
-      btn.textContent = 'Delete';
-      btn.onclick = async (e)=>{
-        e.stopPropagation();
-        if(confirm('Delete your letter?')){
-          await deleteDoc(doc(db,'notes','letters','memberNotes',l.id));
-        }
-      }
-      div.appendChild(btn);
-    }
 
     wallDiv.appendChild(div);
   });
-
-  section.appendChild(wallDiv);
-  favoritesContainer.appendChild(section);
 }
-
-// Load notes & letters for each member
-members.forEach(member=>{
-  const notesCol = collection(db,'notes',member.name,'memberNotes');
-  const lettersCol = collection(db,'notes','letters','memberNotes');
-
-  let notes=[], letters=[];
-
-  onSnapshot(notesCol, snap=>{
-    notes = snap.docs.map(d=>({id:d.id,...d.data()}));
-    update();
-  });
-
-  onSnapshot(lettersCol, snap=>{
-    letters = snap.docs.map(d=>({id:d.id,...d.data()}));
-    update();
-  });
-
-  function update(){
-    const oldSection=[...favoritesContainer.getElementsByClassName('member-section')]
-      .find(s=>s.querySelector('h2').textContent===member.name.toUpperCase());
-    if(oldSection) oldSection.remove();
-    renderMember(member, notes, letters);
-  }
-});
 </script>
 </body>
 </html>
